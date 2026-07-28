@@ -33,7 +33,6 @@ META_PATH = DATA_DIR / "生猪价格_数据说明.json"
 STOCK_PATH = DATA_DIR / "牧原股份股价_后复权.csv"
 STOCK_RAW_PATH = DATA_DIR / "牧原股份股价_腾讯原始.json"
 STOCK_CORR_PATH = REPORTS_DIR / "股价_猪价_营收相关性.csv"
-TARGET_PATH = REPORTS_DIR / "股价情景目标价.csv"
 
 PRICE_URL = "https://hqb.nxin.com/pigindex/getPigIndexChart.shtml?regionId=0"
 
@@ -385,50 +384,6 @@ def stock_driver_correlations(merged: pd.DataFrame) -> pd.DataFrame:
     return pd.DataFrame(results)
 
 
-def target_price_scenarios(
-    merged: pd.DataFrame, current_price: float
-) -> tuple[pd.DataFrame, dict[str, float]]:
-    model = pd.DataFrame({
-        "stock_return": merged["季末后复权收盘价"].shift(-4) / merged["季末后复权收盘价"] - 1,
-        "pork_change": merged["季度均价_元每公斤"].shift(-4) / merged["季度均价_元每公斤"] - 1,
-        "revenue_growth": merged["营收同比_%"].shift(-4) / 100,
-    }).dropna()
-    if len(model) < 20:
-        raise ValueError(f"目标价模型样本不足: {len(model)}")
-    x = np.column_stack([np.ones(len(model)), model["pork_change"], model["revenue_growth"]])
-    y = model["stock_return"].to_numpy()
-    coefficients = np.linalg.lstsq(x, y, rcond=None)[0]
-    fitted = x @ coefficients
-    residual_std = float(np.sqrt(np.sum((y - fitted) ** 2) / max(len(y) - x.shape[1], 1)))
-    total_variance = float(np.sum((y - y.mean()) ** 2))
-    r_squared = 1 - float(np.sum((y - fitted) ** 2)) / total_variance if total_variance else np.nan
-
-    assumptions = [
-        ("保守", 0.10, 0.05),
-        ("基准", 0.20, 0.15),
-        ("乐观", 0.30, 0.25),
-    ]
-    rows: list[dict[str, object]] = []
-    for name, pork_change, revenue_growth in assumptions:
-        predicted_return = float(coefficients @ np.array([1, pork_change, revenue_growth]))
-        low_return = predicted_return - residual_std
-        high_return = predicted_return + residual_std
-        rows.append({
-            "情景": name, "未来一年猪价涨幅_%": pork_change * 100,
-            "未来一年营收增速_%": revenue_growth * 100,
-            "预计股价收益_%": predicted_return * 100,
-            "统计目标价_元": max(0, current_price * (1 + predicted_return)),
-            "目标价下沿_元": max(0, current_price * (1 + low_return)),
-            "目标价上沿_元": max(0, current_price * (1 + high_return)),
-        })
-    stats = {
-        "intercept": float(coefficients[0]), "pork_beta": float(coefficients[1]),
-        "revenue_beta": float(coefficients[2]), "residual_std": residual_std,
-        "r_squared": r_squared, "sample_size": float(len(model)),
-    }
-    return pd.DataFrame(rows), stats
-
-
 def regression_stats(merged: pd.DataFrame, metric: str, lag: int) -> tuple[float, float, int]:
     pairs = pd.DataFrame({
         "x": merged["季度均价_元每公斤"].shift(lag), "y": merged[metric]
@@ -574,8 +529,6 @@ def build_report(
     merged: pd.DataFrame,
     corr: pd.DataFrame,
     stock_corr: pd.DataFrame,
-    scenarios: pd.DataFrame,
-    model_stats: dict[str, float],
     current_stock_price: float,
     source: str,
     stock_source: str,
@@ -591,8 +544,6 @@ def build_report(
     ].sort_values("Pearson相关系数", key=lambda s: s.abs(), ascending=False)
     pork_stock_row = best_stock_rows[best_stock_rows["驱动指标"] == "猪价环比"].iloc[0]
     revenue_stock_row = best_stock_rows[best_stock_rows["驱动指标"] == "营收同比"].iloc[0]
-    base_scenario = scenarios[scenarios["情景"] == "基准"].iloc[0]
-    expected_direction = "偏上行" if base_scenario["预计股价收益_%"] > 0 else "偏下行"
 
     if abs(margin_row["Pearson相关系数"]) >= 0.7:
         conclusion = "样本内，猪价与牧原盈利能力呈强相关"
@@ -605,8 +556,7 @@ def build_report(
       <div class="signal"><span>核心判断</span><strong>{html.escape(conclusion)}</strong><small>以毛利率最强滞后关系判断</small></div>
       <div class="signal"><span>毛利率最强相关</span><strong>{margin_row['Pearson相关系数']:+.2f}</strong><small>猪价领先 {int(margin_row['猪价领先季度数'])} 季 · n={int(margin_row['样本数'])}</small></div>
       <div class="signal"><span>净利润最强相关</span><strong>{profit_row['Pearson相关系数']:+.2f}</strong><small>猪价领先 {int(profit_row['猪价领先季度数'])} 季 · n={int(profit_row['样本数'])}</small></div>
-      <div class="signal"><span>基准情景方向</span><strong>{expected_direction}</strong><small>猪价 +20% · 营收 +15%</small></div>
-      <div class="signal"><span>12个月统计目标价</span><strong>{base_scenario['统计目标价_元']:.2f}元</strong><small>当前 {current_stock_price:.2f}元 · 区间 {base_scenario['目标价下沿_元']:.2f}—{base_scenario['目标价上沿_元']:.2f}</small></div>"""
+      <div class="signal"><span>目标价方法</span><strong><a href="基本面估值分析.html">量价成本模型</a></strong><small>当前价 {current_stock_price:.2f}元 · 不使用相关性回归</small></div>"""
 
     best_table_rows = "".join(
         f"<tr><td>{html.escape(str(row['经营指标']))}</td><td>{int(row['猪价领先季度数'])} 季</td>"
@@ -625,6 +575,8 @@ def build_report(
         f"<td>{int(row['季度数'])}</td><td>{row['平均猪价']:.2f}</td><td>{row['平均毛利率']:.1f}%</td>"
         f"<td>{row['平均净利率']:.1f}%</td><td>{row['平均归母净利润']:.1f}亿</td></tr>" for _, row in phase.iterrows()
     )
+    best_phase = phase.loc[phase["平均归母净利润"].idxmax()]
+    worst_phase = phase.loc[phase["平均归母净利润"].idxmin()]
 
     stock_corr_rows = "".join(
         f"<tr><td>{html.escape(str(row['驱动指标']))}</td><td>{html.escape(str(row['关系说明']))}</td>"
@@ -632,14 +584,6 @@ def build_report(
         f"<td>{row['Spearman相关系数']:+.3f}</td><td>{int(row['样本数'])}</td></tr>"
         for _, row in best_stock_rows.iterrows()
     )
-    scenario_rows = "".join(
-        f"<tr><td>{html.escape(str(row['情景']))}</td><td>+{row['未来一年猪价涨幅_%']:.0f}%</td>"
-        f"<td>+{row['未来一年营收增速_%']:.0f}%</td><td>{row['预计股价收益_%']:+.1f}%</td>"
-        f"<td><strong>{row['统计目标价_元']:.2f}元</strong></td>"
-        f"<td>{row['目标价下沿_元']:.2f}—{row['目标价上沿_元']:.2f}元</td></tr>"
-        for _, row in scenarios.iterrows()
-    )
-
     timeline_rows = "".join(
         f"<tr><td>{html.escape(str(row['季度']))}</td><td>{html.escape(str(row['猪周期阶段']))}</td>"
         f"<td>{row['季度均价_元每公斤']:.2f}</td><td>{fmt(row['猪价同比_%'], '%', 1)}</td>"
@@ -659,9 +603,9 @@ def build_report(
 *{{box-sizing:border-box}} body{{margin:0;background:var(--paper);color:var(--ink);font-family:"Microsoft YaHei UI","Microsoft YaHei",sans-serif;letter-spacing:0}}
 .shell{{width:min(1180px,calc(100% - 48px));margin:auto}} header{{padding:44px 0 26px;border-bottom:1px solid var(--ink)}}
 .meta{{display:flex;justify-content:space-between;color:var(--muted);font-size:11px}} h1{{margin:22px 0 10px;font:500 clamp(38px,6vw,72px)/1 "STZhongsong","SimSun",serif}}
-.lead{{max-width:760px;margin:0;color:var(--muted);line-height:1.7;font-size:14px}} .signals{{display:grid;grid-template-columns:1.45fr repeat(4,1fr);border-bottom:1px solid var(--ink)}}
+.lead{{max-width:760px;margin:0;color:var(--muted);line-height:1.7;font-size:14px}} .signals{{display:grid;grid-template-columns:1.45fr repeat(3,1fr);border-bottom:1px solid var(--ink)}}
 .signal{{min-width:0;padding:24px 18px;border-right:1px solid var(--line)}}.signal:first-child{{padding-left:0}}.signal:last-child{{border:0}}
-.signal span,.signal small{{display:block;color:var(--muted);font-size:10px}}.signal strong{{display:block;margin:10px 0 8px;font:500 19px/1.35 "STZhongsong","SimSun",serif}}
+.signal span,.signal small{{display:block;color:var(--muted);font-size:10px}}.signal strong{{display:block;margin:10px 0 8px;font:500 19px/1.35 "STZhongsong","SimSun",serif}}.signal a{{color:inherit}}
 .section-head{{display:flex;justify-content:space-between;align-items:end;gap:28px;padding:58px 0 17px;border-bottom:1px solid var(--ink)}} h2{{margin:0;font:500 30px/1 "STZhongsong","SimSun",serif}}
 .section-head p{{max-width:660px;margin:0;text-align:right;color:var(--muted);font-size:11px;line-height:1.7}}.chart{{padding:10px 0;border-bottom:1px solid var(--line);overflow:hidden}}
 .tables{{display:grid;grid-template-columns:1fr 1fr;gap:38px;margin:22px 0 12px}} table{{width:100%;border-collapse:collapse;font-size:12px}}caption{{padding:0 0 12px;text-align:left;font:500 18px "STZhongsong","SimSun",serif}}
@@ -671,19 +615,20 @@ th{{color:var(--muted);font-weight:400;text-align:left}}th,td{{padding:10px 8px;
 footer{{border-top:1px solid var(--ink);padding:24px 0 38px;color:var(--muted);font-size:10px}}
 @media(max-width:800px){{.shell{{width:calc(100% - 28px)}}.meta{{flex-direction:column;gap:4px}}.signals{{grid-template-columns:1fr 1fr}}.signal:nth-child(2){{border-right:0}}.signal:first-child{{padding-left:18px}}.section-head{{align-items:flex-start;flex-direction:column}}.section-head p{{text-align:left}}.tables{{grid-template-columns:1fr;gap:28px;overflow-x:auto}}}}
 </style></head><body><div class="shell">
-<header><div class="meta"><span>周期研究 / SZ.002714</span><span>联合样本 {merged['报告日期'].min():%Y-%m-%d} — {merged['报告日期'].max():%Y-%m-%d}</span></div><h1>猪周期 × 经营 × 股价</h1><p class="lead">把全国生猪成交均价、牧原单季度经营指标和后复权股价放在同一时间轴，检验市场如何交易周期，并用明确的猪价与营收假设估算情景目标价。</p></header>
+<header><div class="meta"><span>周期研究 / SZ.002714</span><span>联合样本 {merged['报告日期'].min():%Y-%m-%d} — {merged['报告日期'].max():%Y-%m-%d}</span></div><h1>猪周期 × 经营 × 股价</h1><p class="lead">把全国生猪成交均价、牧原单季度经营指标和后复权股价放在同一时间轴，用于检验周期传导和市场领先关系；相关性不再用于直接推导目标价。</p></header>
 <section class="signals">{summary_cards}</section>
 <div class="section-head"><h2>周期与经营共振</h2><p>价格采用行情宝全国生猪成交均价，覆盖 2015 年以来多个完整周期；公司指标使用单季度口径。</p></div>{charts}
-<div class="section-head"><h2>股价联动与目标价</h2><p>相关性使用季度后复权收益率，避免分红送转和早期前复权负值造成失真；目标价是未来一年猪价和营收情景的历史回归结果，不是基本面估值。</p></div>
+<div class="section-head"><h2>股价联动与估值入口</h2><p>相关性使用季度后复权收益率，仅用于观察领先与滞后；目标价改由出栏量、售价、单位成本和历史周期顶部估值逐项计算。</p></div>
 <div class="tables"><table><caption>股价最强领先/滞后关系</caption><thead><tr><th>驱动指标</th><th>时序关系</th><th>Pearson</th><th>Spearman</th><th>n</th></tr></thead><tbody>{stock_corr_rows}</tbody></table>
-<table><caption>12个月情景目标价</caption><thead><tr><th>情景</th><th>猪价</th><th>营收</th><th>股价收益</th><th>目标价</th><th>残差区间</th></tr></thead><tbody>{scenario_rows}</tbody></table></div>
-<div class="note"><strong>如何理解“猪肉涨价后股价怎么走”：</strong>历史最强关系为“{html.escape(str(pork_stock_row['关系说明']))}”，Pearson={pork_stock_row['Pearson相关系数']:+.3f}；营收关系为“{html.escape(str(revenue_stock_row['关系说明']))}”，Pearson={revenue_stock_row['Pearson相关系数']:+.3f}。基准情景假设未来一年猪价上涨20%、营收增长15%，模型方向为<strong>{expected_direction}</strong>，统计目标价 {base_scenario['统计目标价_元']:.2f} 元。模型 R²={model_stats['r_squared']:.2f}，n={int(model_stats['sample_size'])}，残差标准差={model_stats['residual_std']:.1%}，区间较宽正是周期股不确定性的真实反映。<br><strong>股价数据源：</strong>{html.escape(stock_source)}；当前价取 {current_stock_price:.2f} 元。后复权价只用于收益计算，目标价以最新实际交易价为基准。</div>
+<table><caption>基本面估值</caption><tbody><tr><td>经营公式</td><td>量 × 重量 ×（售价 − 成本）</td></tr><tr><td>估值校准</td><td>历史周期顶部前瞻PE / PB / 市值每万头</td></tr><tr><td>完整报告</td><td><a href="基本面估值分析.html">打开基本面估值分析</a></td></tr></tbody></table></div>
+<div class="note"><strong>如何理解“猪肉涨价后股价怎么走”：</strong>历史最强关系为“{html.escape(str(pork_stock_row['关系说明']))}”，Pearson={pork_stock_row['Pearson相关系数']:+.3f}；营收关系为“{html.escape(str(revenue_stock_row['关系说明']))}”，Pearson={revenue_stock_row['Pearson相关系数']:+.3f}。这些结果说明市场可能提前交易经营变化，但样本少、位移择优且不构成估值依据，因此本报告不再输出回归目标价。<br><strong>股价数据源：</strong>{html.escape(stock_source)}；当前价取 {current_stock_price:.2f} 元。后复权价只用于收益和相关性计算。</div>
 <div class="section-head"><h2>统计结论</h2><p>每项指标展示绝对值最大的 0—4 季领先关系。领先期是在样本中择优，存在多重比较偏差，不能直接用于预测。</p></div>
 <div class="tables"><table><caption>最强滞后相关</caption><thead><tr><th>经营指标</th><th>猪价领先</th><th>Pearson</th><th>Spearman</th><th>强度</th><th>n</th></tr></thead><tbody>{best_table_rows}</tbody></table>
 <table><caption>周期阶段均值</caption><thead><tr><th>阶段</th><th>季度</th><th>猪价</th><th>毛利率</th><th>净利率</th><th>净利润</th></tr></thead><tbody>{phase_rows}</tbody></table></div>
-<div class="note"><strong>毛利率敏感度：</strong>在毛利率最强相关的领先 {int(margin_row['猪价领先季度数'])} 季口径下，单变量线性拟合显示猪价每提高 1 元/公斤，毛利率平均变化 {margin_slope:+.2f} 个百分点，R²={margin_r2:.2f}，n={margin_n}。这只是样本描述；饲料成本、非洲猪瘟、产能、出栏结构、会计减值和公司成本下降都会改变传导幅度。<br><strong>数据源：</strong>{html.escape(source)}。成交均价比终端猪肉零售价更贴近养殖企业销售端，但仍不等于牧原自身商品猪结算价。</div>
+<div class="note"><strong>表格结论：</strong>阶段均值中，归母净利润最高的是“{html.escape(str(best_phase['猪周期阶段']))}”，季度平均为 {best_phase['平均归母净利润']:.1f} 亿元；最低的是“{html.escape(str(worst_phase['猪周期阶段']))}”，季度平均为 {worst_phase['平均归母净利润']:.1f} 亿元。这说明周期阶段对盈利方向有解释力，但同一阶段内部仍会受到成本和出栏量变化影响。<br><strong>毛利率敏感度：</strong>在毛利率最强相关的领先 {int(margin_row['猪价领先季度数'])} 季口径下，单变量线性拟合显示猪价每提高 1 元/公斤，毛利率平均变化 {margin_slope:+.2f} 个百分点，R²={margin_r2:.2f}，n={margin_n}。这只是样本描述；饲料成本、非洲猪瘟、产能、出栏结构、会计减值和公司成本下降都会改变传导幅度。<br><strong>数据源：</strong>{html.escape(source)}。成交均价比终端猪肉零售价更贴近养殖企业销售端，但仍不等于牧原自身商品猪结算价。</div>
 <div class="section-head"><h2>逐季对照</h2><p>用同一时间轴查看周期位置与经营结果，便于识别价格上行是否已经传导到报表。</p></div>
 <div class="timeline-wrap"><table class="timeline-table"><thead><tr><th>季度</th><th>周期阶段</th><th>猪价</th><th>猪价同比</th><th>毛利率</th><th>净利率</th><th>归母净利</th><th>股价收益</th><th>季末复权价</th></tr></thead><tbody>{timeline_rows}</tbody></table></div>
+<div class="note"><strong>表格结论：</strong>最新季度 {html.escape(str(latest['季度']))} 被划分为“{html.escape(str(latest['猪周期阶段']))}”，季度均价 {latest['季度均价_元每公斤']:.2f} 元/公斤，毛利率 {latest['毛利率_%']:.1f}%，归母净利润 {latest['单季归母净利润_亿元']:.1f} 亿元，股价季度收益 {latest['股价季度收益_%']:+.1f}%。逐季表适合检查价格变化是否已传导至利润，但不能仅凭单季股价与利润同向或背离判断下一阶段趋势。</div>
 </div><footer><div class="shell">生成于 {generated} · 相关性不等于因果，不构成投资建议</div></footer></body></html>"""
 
 
@@ -719,15 +664,12 @@ def main() -> int:
         raise SystemExit(f"共同季度只有 {len(merged)} 个，样本不足以进行相关性分析")
     corr = correlations(merged)
     stock_corr = stock_driver_correlations(merged)
-    scenarios, model_stats = target_price_scenarios(merged, current_stock_price)
     atomic_csv(merged, MERGED_PATH)
     atomic_csv(corr, CORR_PATH)
     atomic_csv(stock_corr, STOCK_CORR_PATH)
-    atomic_csv(scenarios, TARGET_PATH)
     REPORT_PATH.write_text(
         build_report(
-            merged, corr, stock_corr, scenarios, model_stats,
-            current_stock_price, source, stock_source,
+            merged, corr, stock_corr, current_stock_price, source, stock_source,
         ),
         encoding="utf-8",
     )
@@ -749,9 +691,8 @@ def main() -> int:
         "current_stock_price": current_stock_price,
         "stock_fetch_warning": stock_fetch_warning,
         "target_price_model": {
-            "horizon": "12个月",
-            "method": "同期未来猪价涨幅与营收增速解释后复权股价收益的 OLS 情景回归",
-            **model_stats,
+            "method": "目标价不再使用相关性回归",
+            "fundamental_report": "reports/基本面估值分析.html",
         },
         "limitations": [
             "行情宝序列始于 2015 年，缺少牧原上市首年 2014 年数据",
@@ -765,7 +706,6 @@ def main() -> int:
     print(f"季度匹配数据: {MERGED_PATH} ({len(merged)} 个季度)")
     print(f"相关性结果: {CORR_PATH}")
     print(f"股价联动结果: {STOCK_CORR_PATH}")
-    print(f"情景目标价: {TARGET_PATH}")
     print(f"可视化报告: {REPORT_PATH}")
     return 0
 

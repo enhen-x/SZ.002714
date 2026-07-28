@@ -1,0 +1,29 @@
+{
+  "average_weight_kg": 120.0,
+  "dividend_payout_ratio": 0.30,
+  "loss_case_pb": 2.50,
+  "valuation_calibration_start": "2020-01-01",
+  "scenarios": [
+    {
+      "name": "压力",
+      "pig_price_yuan_per_kg": 12.0,
+      "unit_cost_yuan_per_kg": 12.0,
+      "annual_volume_10k_heads": 7600.0,
+      "valuation_quantile": 0.25
+    },
+    {
+      "name": "基准",
+      "pig_price_yuan_per_kg": 15.0,
+      "unit_cost_yuan_per_kg": 11.5,
+      "annual_volume_10k_heads": 8000.0,
+      "valuation_quantile": 0.50
+    },
+    {
+      "name": "景气",
+      "pig_price_yuan_per_kg": 18.0,
+      "unit_cost_yuan_per_kg": 11.0,
+      "annual_volume_10k_heads": 8400.0,
+      "valuation_quantile": 0.25
+    }
+  ]
+}
