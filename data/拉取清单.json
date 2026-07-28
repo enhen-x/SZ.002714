@@ -1,0 +1,48 @@
+{
+  "stock": {
+    "symbol": "SZ.002714",
+    "code": "002714",
+    "name": "牧原股份"
+  },
+  "akshare_version": "1.17.90",
+  "started_at": "2026-07-28T20:30:28+08:00",
+  "finished_at": "2026-07-28T20:31:18+08:00",
+  "output_directory": "G:\\理财\\个股分析\\SZ.002714 牧原股份\\data",
+  "datasets": [
+    {
+      "name": "资产负债表",
+      "file": "资产负债表_按报告期.csv",
+      "status": "success",
+      "rows": 56,
+      "columns": 319
+    },
+    {
+      "name": "利润表",
+      "file": "利润表_按报告期.csv",
+      "status": "success",
+      "rows": 58,
+      "columns": 203
+    },
+    {
+      "name": "现金流量表",
+      "file": "现金流量表_按报告期.csv",
+      "status": "success",
+      "rows": 58,
+      "columns": 254
+    },
+    {
+      "name": "主要财务指标（按报告期）",
+      "file": "主要财务指标_按报告期.csv",
+      "status": "success",
+      "rows": 58,
+      "columns": 141
+    },
+    {
+      "name": "主要财务指标（按单季度）",
+      "file": "主要财务指标_按单季度.csv",
+      "status": "success",
+      "rows": 55,
+      "columns": 26
+    }
+  ]
+}
