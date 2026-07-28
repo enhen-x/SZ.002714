@@ -620,7 +620,7 @@ footer{{border-top:1px solid var(--ink);padding:24px 0 38px;color:var(--muted);f
 <div class="section-head"><h2>周期与经营共振</h2><p>价格采用行情宝全国生猪成交均价，覆盖 2015 年以来多个完整周期；公司指标使用单季度口径。</p></div>{charts}
 <div class="section-head"><h2>股价联动与估值入口</h2><p>相关性使用季度后复权收益率，仅用于观察领先与滞后；目标价改由出栏量、售价、单位成本和历史周期顶部估值逐项计算。</p></div>
 <div class="tables"><table><caption>股价最强领先/滞后关系</caption><thead><tr><th>驱动指标</th><th>时序关系</th><th>Pearson</th><th>Spearman</th><th>n</th></tr></thead><tbody>{stock_corr_rows}</tbody></table>
-<table><caption>基本面估值</caption><tbody><tr><td>经营公式</td><td>量 × 重量 ×（售价 − 成本）</td></tr><tr><td>估值校准</td><td>历史周期顶部前瞻PE / PB / 市值每万头</td></tr><tr><td>完整报告</td><td><a href="基本面估值分析.html">打开基本面估值分析</a></td></tr></tbody></table></div>
+<table><caption>基本面与周期预测</caption><tbody><tr><td>经营公式</td><td>量 × 重量 ×（售价 − 成本）</td></tr><tr><td>估值校准</td><td>历史周期顶部前瞻PE / PB / 市值每万头</td></tr><tr><td>基本面报告</td><td><a href="基本面估值分析.html">打开基本面估值分析</a></td></tr><tr><td>顶部预测</td><td><a href="猪周期驱动与顶部预测.html">打开周期驱动与顶部预测</a></td></tr></tbody></table></div>
 <div class="note"><strong>如何理解“猪肉涨价后股价怎么走”：</strong>历史最强关系为“{html.escape(str(pork_stock_row['关系说明']))}”，Pearson={pork_stock_row['Pearson相关系数']:+.3f}；营收关系为“{html.escape(str(revenue_stock_row['关系说明']))}”，Pearson={revenue_stock_row['Pearson相关系数']:+.3f}。这些结果说明市场可能提前交易经营变化，但样本少、位移择优且不构成估值依据，因此本报告不再输出回归目标价。<br><strong>股价数据源：</strong>{html.escape(stock_source)}；当前价取 {current_stock_price:.2f} 元。后复权价只用于收益和相关性计算。</div>
 <div class="section-head"><h2>统计结论</h2><p>每项指标展示绝对值最大的 0—4 季领先关系。领先期是在样本中择优，存在多重比较偏差，不能直接用于预测。</p></div>
 <div class="tables"><table><caption>最强滞后相关</caption><thead><tr><th>经营指标</th><th>猪价领先</th><th>Pearson</th><th>Spearman</th><th>强度</th><th>n</th></tr></thead><tbody>{best_table_rows}</tbody></table>

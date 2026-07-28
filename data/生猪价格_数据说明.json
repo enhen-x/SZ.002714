@@ -8,7 +8,7 @@
   "observation_frequency": "周度为主",
   "observation_rows": 576,
   "matched_quarters": 45,
-  "updated_at": "2026-07-29T01:17:51+08:00",
+  "updated_at": "2026-07-29T01:58:06+08:00",
   "fetch_warning": "AkShare: SSLError: HTTPSConnectionPool(host='hqb.nxin.com', port=443): Max retries exceeded with url: /pigindex/getPigIndexChart.shtml?regionId=0 (Caused by SSLError(SSLEOFError(8, '[SSL: UNEXPECTED_EOF_WHILE_READING] EOF occurred in violation of protocol (_ssl.c:1028)'))); AkShare: SSLError: HTTPSConnectionPool(host='hqb.nxin.com', port=443): Max retries exceeded with url: /pigindex/getPigIndexChart.shtml?regionId=0 (Caused by SSLError(SSLEOFError(8, '[SSL: UNEXPECTED_EOF_WHILE_READING] EOF occurred in violation of protocol (_ssl.c:1028)')))",
   "stock_source": "腾讯证券后复权行情（AkShare TLS 后备）",
   "stock_observation_start": "2014-01-28",
