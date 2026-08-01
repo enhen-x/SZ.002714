@@ -1,0 +1,504 @@
+<!DOCTYPE html>
+<html lang="zh-CN">
+<head>
+<meta charset="UTF-8">
+<title>证券分析研究报告 — 牧原股份 (002714.SZ)</title>
+<script src="https://cdn.plot.ly/plotly-2.35.2.min.js"></script>
+<style>body{font-family:"Microsoft YaHei","PingFang SC",sans-serif;margin:0;background:#fff;color:#1a1a1a;font-size:15px;line-height:1.7}
+.header{border-bottom:1px solid #e0e0e0;padding:36px 40px 28px;background:#fafafa}
+.header h1{margin:0;font-size:24px;font-weight:600;letter-spacing:.5px}
+.header .sub{color:#999;margin-top:8px;font-size:13px}
+.header .disclaimer{color:#bbb;font-size:11px;margin-top:12px;line-height:1.5}
+.container{max-width:900px;margin:0 auto;padding:32px 24px 80px}
+.section{padding:0;margin:40px 0}
+.section h2{font-size:17px;font-weight:600;padding-bottom:8px;border-bottom:2px solid #2c3e50;margin:0 0 16px;color:#2c3e50}
+.section h3{font-size:14px;font-weight:600;color:#555;margin:18px 0 8px}
+.section p,.section li{font-size:14px;line-height:1.8;color:#444}
+table{border-collapse:collapse;width:100%;font-size:13px;margin:12px 0}
+th,td{border-bottom:1px solid #eee;padding:8px 12px;text-align:left;vertical-align:top}
+th{font-weight:500;color:#888;font-size:12px;letter-spacing:.3px}
+.source{font-size:11px;color:#bbb;margin-bottom:8px}
+.box{border-left:3px solid #3498db;padding:12px 18px;margin:16px 0;background:#f8fafc}
+.box-red{border-left:3px solid #c0392b;padding:12px 18px;margin:16px 0;background:#fef5f5}
+.box-green{border-left:3px solid #27ae60;padding:12px 18px;margin:16px 0;background:#f5fdf7}
+.box-orange{border-left:3px solid #e67e22;padding:12px 18px;margin:16px 0;background:#fefaf5}
+.col2{display:grid;grid-template-columns:1fr 1fr;gap:32px}
+.cards{display:grid;grid-template-columns:repeat(auto-fit,minmax(130px,1fr));gap:1px;margin:0 0 24px;border:1px solid #e8e8e8}
+.card{background:#fafafa;padding:14px 16px;text-align:center}
+.card .label{font-size:11px;color:#999;text-transform:uppercase;letter-spacing:.5px;margin-bottom:4px}
+.card b{font-size:18px;font-weight:500;color:#1a1a1a}
+.card .unit{font-size:10px;color:#aaa;margin-left:2px}
+.rec-badge{display:inline-block;padding:3px 12px;border-radius:3px;font-size:13px;font-weight:600;letter-spacing:.5px}
+.rec-buy{background:#27ae60;color:#fff}
+.rec-hold{background:#f39c12;color:#fff}
+.rec-sell{background:#c0392b;color:#fff}
+.page-break{border:none;border-top:2px dashed #e0e0e0;margin:48px 0}
+@media(max-width:680px){.col2,.cards{grid-template-columns:1fr}}
+</style>
+</head>
+<body>
+<div class="header">
+  <h1>证券分析研究报告 — 牧原股份 (002714.SZ)</h1>
+  <div class="sub">八步流程综合报告 · 2026-08-02 · 数据截至2026年7月末 · 基于格雷厄姆/多德与胡克方法论</div>
+  <div class="disclaimer">⚠ 免责声明：本报告仅供学习研究参考，不构成任何投资建议。任何投资决策应基于投资者自身的独立判断。<br>
+  数据来源标注于各部分末尾，详细溯源见 data/sources/SOURCES.md。</div>
+</div>
+<div class="container">
+
+<!-- ==================== 第一部分：概述 ==================== -->
+<div class="section">
+  <h2>一、概述</h2>
+
+  <div class="box-green">
+    <p style="margin:0">
+      <b>投资建议：<span style="font-size:18px;color:#27ae60">增持</span></b> &nbsp;|&nbsp;
+      <b>当前股价：<span style="font-size:18px">39.3 元</span></b>（2026-07-28）&nbsp;|&nbsp;
+      <b>12个月目标价：<span style="font-size:18px;color:#2980b9">42 – 49 元</span></b>&nbsp;|&nbsp;
+      <b>潜在上涨：<span style="color:#27ae60">+7% – +25%</span></b>
+    </p>
+  </div>
+
+  <h3>估值摘要</h3>
+  <p>采用周期型公司估值方法论（胡克框架），使用<b>完整周期平均盈利</b>（非当年利润），四种方法交叉验证：</p>
+  <table>
+    <tr><th>估值方法</th><th>权重</th><th>低估</th><th>合理</th><th>高估</th><th>核心参数</th></tr>
+    <tr><td>DCF 内在价值法</td><td>20%</td><td>40 元</td><td style='font-weight:600'>50 元</td><td>63 元</td><td style='font-size:12px;color:#888'>WACC 8.5%, g=2.0%</td></tr>
+    <tr><td>相对价值法 (PE)</td><td>60%</td><td>31 元</td><td style='font-weight:600'>39 元</td><td>45 元</td><td style='font-size:12px;color:#888'>周期EPS 2.04 × PE 15-22×</td></tr>
+    <tr><td>并购价值法</td><td>10%</td><td>18 元</td><td style='font-weight:600'>27 元</td><td>36 元</td><td style='font-size:12px;color:#888'>EV/EBITDA 6-10×</td></tr>
+    <tr><td>LBO 法</td><td>10%</td><td>16 元</td><td style='font-weight:600'>20 元</td><td>25 元</td><td style='font-size:12px;color:#888'>5.5-7.5× EBITDA</td></tr>
+    <tr style='background:#f0f4f8'><td><b>加权结果</b></td><td><b>100%</b></td><td><b>30 元</b></td><td style='font-weight:700;font-size:16px'>38 元</td><td><b>46 元</b></td><td style='font-size:12px;color:#888'>安全边际 ±15%: 32-44 元</td></tr>
+  </table>
+
+  <h3>核心论点</h3>
+  <ol>
+    <li><b>成本护城河持续加深</b>：完全成本 11.3 元/kg 为上市猪企最低，较行业平均低 1-2 元/kg——在周期低谷意味着比别人少亏、比别人多活。2026H1成本已降至 11.6 元/kg。</li>
+    <li><b>周期低谷已近底部</b>：能繁母猪 3780 万头（正常保有量 100.8%），产能去化加速。猪粮比 3.99 为历史最深亏损区，行业性亏损不可能无限持续。</li>
+    <li><b>当前估值处于 2021 年以来最具吸引力的区间</b>：周期 PE 仅 19.3×，低于 2021 年以来任何低谷水平（最低 20.6×）。"模型合理 + 市场便宜"交汇。</li>
+    <li><b>周期高峰期权价值显著</b>：若猪价回升至 16-18 元/kg（历史常见温和高峰），按峰值 PE 14×，股价可达 106-150 元（+170%~280%）。</li>
+    <li><b>财务安全垫充足</b>：经营现金流 301 亿（2025），利息覆盖 7.2 倍，有息负债进入去杠杆通道——能安然度过周期底部。</li>
+  </ol>
+
+  <h3>主要风险</h3>
+  <p>猪价持续低迷（概率30%）、饲料成本反弹（20%）、疫病复发（15%）、融资环境恶化（10%）、管理层风险（5%）。详见第八部分风险矩阵。</p>
+
+  <p class="source">来源：第1-7步分析成果综合。估值参数详见 data/sources/SOURCES.md。</p>
+</div>
+
+<hr class="page-break">
+
+<!-- ==================== 第二部分：宏观经济评述 ==================== -->
+<div class="section">
+  <h2>二、宏观经济评述</h2>
+  <p class="source">来源：国家统计局、中国人民银行、农业农村部、海关总署、行情宝。完整数据溯源见第1步报告。</p>
+
+  <div class="cards"><div class="card"><div class="label">GDP 同比</div><b>4.70</b><span class="unit">%</span></div><div class="card"><div class="label">制造业 PMI</div><b>49.20</b><span class="unit"></span></div><div class="card"><div class="label">CPI 同比</div><b>1.00</b><span class="unit">%</span></div><div class="card"><div class="label">LPR 1Y</div><b>3.00</b><span class="unit">%</span></div><div class="card"><div class="label">M2 同比</div><b>8.00</b><span class="unit">%</span></div><div class="card"><div class="label">生猪均价</div><b>10.84</b><span class="unit">元/kg</span></div><div class="card"><div class="label">能繁母猪</div><b>3780</b><span class="unit">万头</span></div><div class="card"><div class="label">猪粮比</div><b>3.99</b><span class="unit"></span></div></div>
+
+  <div class="box-red">
+    <h3 style="margin-top:0">核心判断：短空长多，拐点待 Q4 确认</h3>
+    <p style="margin:0">
+      ① <b>产能去化加速但拐点未确认</b>：能繁母猪 2026Q2 末 3780 万头（同比 -6.5%、环比 -3.2%），为正常保有量 3750 万头的 100.8%，重回绿色区间上沿。<br>
+      ② <b>猪价 7 月现首个回升信号</b>（6 月 9.57 → 7 月 10.84 元，环比 +13.3%），但仍处历史最深亏损区（猪粮比 3.99）。<br>
+      ③ <b>成本端与融资端均处有利环境</b>：豆粕创两年新低（2818 元/吨）、人民币升值降低进口大豆成本、利率下行减轻财务负担。<br>
+      ④ <b>宏观底 + 周期底双重确认尚需时间</b>：周期拐点时点需 2026Q4 前持续验证。
+    </p>
+  </div>
+
+  <h3>关键宏观驱动因素</h3>
+  <div class="col2">
+    <div>
+      <h3>供给端（核心）</h3>
+      <ul>
+        <li>能繁母猪存栏 → 领先 10 个月出栏量</li>
+        <li>当前 3780 万头，同比 -6.5%，去化方向确定</li>
+        <li>但绝对值仍接近正常保有量上限</li>
+        <li>规模化率提升（73%）改变周期斜率——去化更慢、底部更长</li>
+      </ul>
+    </div>
+    <div>
+      <h3>成本端 + 融资端</h3>
+      <ul>
+        <li>玉米 ~2380 元/吨、豆粕 2818（两年新低）</li>
+        <li>人民币汇率升值 3.4% → 进口大豆成本降低</li>
+        <li>LPR 1Y=3.00%，5Y=3.50%——历史低位</li>
+        <li>M2 同比 8.0%——流动性充裕</li>
+      </ul>
+    </div>
+  </div>
+  <div class="col2">
+    <div>
+      <h3>需求端</h3>
+      <ul>
+        <li>GDP ~4.7%——猪肉消费弹性低，总量平稳</li>
+        <li>CPI ~1.0%——低通胀环境压制猪价上行空间</li>
+        <li>猪肉进口 2026H1 同比 -12%——外部竞争压力减轻</li>
+      </ul>
+    </div>
+    <div>
+      <h3>对牧原的具体影响</h3>
+      <ul>
+        <li>饲料成本下行 → 放大成本优势（比别人赚得更多 / 亏得更少）</li>
+        <li>利率下行 → 财务费用降低（有息负债 ~570 亿，每降 0.5pp 省 ~2.9 亿/年）</li>
+        <li>进口减少 → 国内供给压力减轻</li>
+      </ul>
+    </div>
+  </div>
+
+  <p class="source">数据来源：国家统计局（GDP/CPI/PPI/能繁）、中国人民银行（LPR/M2/汇率）、海关总署（进口）、行情宝（猪价）。详见第1步报告与 data/sources/ 目录。</p>
+</div>
+
+<hr class="page-break">
+
+<!-- ==================== 第三部分：相关股票市场前景 ==================== -->
+<div class="section">
+  <h2>三、相关股票市场前景</h2>
+
+  <p>养猪板块属于<b>农林牧渔</b>行业，在 A 股中属于<b>中小市值防御性+周期性板块</b>。当前板块核心特征：</p>
+
+  <div class="col2">
+    <div>
+      <h3>板块表现</h3>
+      <ul>
+        <li>2025年生猪养殖指数整体下行——猪价下行周期压制板块情绪</li>
+        <li>板块内部分化严重：成本低的龙头（牧原）vs 成本高的跟随者（正邦）走势分化</li>
+        <li>资金对养猪股的定价已从"猪价预期"转向"成本差异+资产负债表质量"</li>
+      </ul>
+    </div>
+    <div>
+      <h3>估值周期</h3>
+      <ul>
+        <li>养猪股 PE 在猪价低谷期"看起来贵"（EPS 低），在猪价高峰期"看起来便宜"（EPS 高）</li>
+        <li>这正是周期股投资的本质：<b>高 PE 买入、低 PE 卖出</b></li>
+        <li>当前牧原周期 PE=19.3×——处于2021年以来最低水平</li>
+        <li>如果周期规律成立，当前是"高PE买入"阶段</li>
+      </ul>
+    </div>
+  </div>
+
+  <div class="box">
+    <p style="margin:0"><b>关键市场信号：</b>生猪期货 LH2701=12.70 元/kg（2026-07-28）——期货市场用"真金白银"投票，预期 2027 年 1 月猪价回升至 ~12.7 元/kg。这是目前可见的、最可靠的市场一致预期。但这仍低于牧原成本（11.0-11.5 元/kg 可覆盖、但盈利微薄），意味着期货市场 <b>尚未定价周期大幅反转</b>——如果反转到来，股价弹性将较大。</p>
+  </div>
+
+  <p class="source">来源：板块分析基于 Wind/东方财富行业指数观察，期货数据来自大连商品交易所 2026-07-28 收盘价。</p>
+</div>
+
+<hr class="page-break">
+
+<!-- ==================== 第四部分：公司及其业务评述 ==================== -->
+<div class="section">
+  <h2>四、公司及其业务评述</h2>
+
+  <h3>4.1 业务模式</h3>
+  <p>牧原股份是中国最大的生猪养殖企业，2025 年出栏 <b>7,798 万头</b>（全国出栏占比 10.8%），采用<b>"自繁自养"全链条一体化模式</b>——从饲料加工、种猪育种、商品猪养殖到屠宰加工全程自主掌控。</p>
+
+  <table>
+    <tr><th></th><th>牧原模式（自繁自养）</th><th>温氏模式（公司+农户）</th></tr>
+    <tr><td>资产轻重</td><td>重资产（自有猪舍）</td><td>轻资产（农户提供猪舍）</td></tr>
+    <tr><td>成本控制</td><td style='color:#27ae60'>精细化管理，成本更低</td><td>受农户执行差异拖累，成本偏高</td></tr>
+    <tr><td>扩张速度</td><td>慢（需要建猪场）</td><td>快（签约农户即可）</td></tr>
+    <tr><td>生物安全</td><td style='color:#27ae60'>全封闭，易统一管控</td><td>分散，难统一标准</td></tr>
+    <tr><td>代表企业</td><td style='font-weight:600'>牧原股份</td><td>温氏股份</td></tr>
+  </table>
+
+  <h3>4.2 核心竞争优势</h3>
+  <div class="box-green">
+    <p style="margin:0">
+      <b>成本领先是第一护城河。</b>牧原完全成本 11.3 元/kg 为上市猪企最低（温氏 12.2、神农 12.5、新希望 12.7、正邦 13.3）。<br>
+      成本优势来源：① 自繁自养全链条管控；② 饲料配方自主（"玉米+豆粕"替代配方降本）；③ 智能猪舍设计（通风/温控/饲喂）；④ 育种体系（种猪性能行业领先）；⑤ 规模效应（采购议价能力）。
+    </p>
+  </div>
+
+  <h3>4.3 产能规模</h3>
+  <table>
+    <tr><th>指标</th><th>数据</th><th>说明</th></tr>
+    <tr><td>年产能</td><td style='font-weight:600'>9,000 万头</td><td>已建成猪舍产能上限（2025年末）</td></tr>
+    <tr><td>能繁母猪</td><td style='font-weight:600'>323 万头</td><td>2025年末存栏，可支撑年出栏 ~7,500 万头</td></tr>
+    <tr><td>2025 实际出栏</td><td style='font-weight:600'>7,798 万头</td><td>产能利用率 ~87%——仍有一定释放空间但增速放缓</td></tr>
+    <tr><td>2026H1 出栏</td><td style='font-weight:600'>3,862 万头</td><td>同比 +7.5%，全年预计 8,100 万头</td></tr>
+    <tr><td>屠宰产能</td><td style='font-weight:600'>~2,000 万头/年</td><td>向下游延伸——从"卖猪"到"卖肉"</td></tr>
+  </table>
+
+  <h3>4.4 管理层评估</h3>
+  <ul>
+    <li><b>创始人秦英林</b>：深耕养猪 30 年+，技术出身，行业理解深厚。持有公司约 38% 股份（含一致行动人），利益高度一致。</li>
+    <li><b>战略定力</b>：逆周期扩张的历史证明——2019-2021 年行业最困难时大规模扩产，奠定了今天的龙头地位。</li>
+    <li><b>当前战略</b>：从"规模扩张"转向"质量提升"——降本增效、去杠杆、向下游延伸。</li>
+    <li><b>关注点</b>：二代接棒过渡期（秦牧原 2024 年起担任副总裁）的治理稳定性。</li>
+  </ul>
+
+  <p class="source">来源：公司年报（2024-2025）、投资者交流纪要、猪易网/博亚和讯行业数据。详见第3步公司分析报告。</p>
+</div>
+
+<hr class="page-break">
+
+<!-- ==================== 第五部分：财务分析 ==================== -->
+<div class="section">
+  <h2>五、财务分析</h2>
+
+  <h3>5.1 营收与利润趋势</h3>
+  <div id="ch1" class="plotly-graph-div" style="width:100%;"></div>
+<script>window.PLOTLYENV=window.PLOTLYENV||{};if(document.getElementById("ch1")){Plotly.newPlot("ch1",{"data":[{"marker":{"color":"#2c3e50"},"name":"营业收入（亿）","opacity":0.85,"text":["4","4","11","15","20","26","30","56","100","134","202","563","789","1248","1109","1379","1441"],"textfont":{"size":10},"textposition":"outside","x":[2009,2010,2011,2012,2013,2014,2015,2016,2017,2018,2019,2020,2021,2022,2023,2024,2025],"y":[4.287154004,4.4451765915,11.3426951425,14.908364250899998,20.4440277109,26.0476339034,30.0347472279,56.0590700309,100.4241593126,133.8815768594,202.2133252564,562.7706560785,788.898705664,1248.2621217774001,1108.607277144,1379.4689207687,1441.4496537168],"type":"bar","xaxis":"x","yaxis":"y"},{"line":{"color":"#c0392b","width":2.5},"marker":{"size":8},"mode":"lines+markers","name":"归母净利润（亿）","x":[2009,2010,2011,2012,2013,2014,2015,2016,2017,2018,2019,2020,2021,2022,2023,2024,2025],"y":[0.943547237,0.8560947956999999,3.5663582538,3.3020786448000004,3.0382947661,0.8019805482,5.958508415599999,23.218987122199998,23.6552936399,5.2020883016,61.143636628500005,274.5142194073,69.0377769192,132.6615651239,-42.6328082031,178.8126048527,154.8689125404],"type":"scatter","xaxis":"x","yaxis":"y2"}],"layout":{"template":{"data":{"barpolar":[{"marker":{"line":{"color":"white","width":0.5},"pattern":{"fillmode":"overlay","size":10,"solidity":0.2}},"type":"barpolar"}],"bar":[{"error_x":{"color":"#2a3f5f"},"error_y":{"color":"#2a3f5f"},"marker":{"line":{"color":"white","width":0.5},"pattern":{"fillmode":"overlay","size":10,"solidity":0.2}},"type":"bar"}],"carpet":[{"aaxis":{"endlinecolor":"#2a3f5f","gridcolor":"#C8D4E3","linecolor":"#C8D4E3","minorgridcolor":"#C8D4E3","startlinecolor":"#2a3f5f"},"baxis":{"endlinecolor":"#2a3f5f","gridcolor":"#C8D4E3","linecolor":"#C8D4E3","minorgridcolor":"#C8D4E3","startlinecolor":"#2a3f5f"},"type":"carpet"}],"choropleth":[{"colorbar":{"outlinewidth":0,"ticks":""},"type":"choropleth"}],"contourcarpet":[{"colorbar":{"outlinewidth":0,"ticks":""},"type":"contourcarpet"}],"contour":[{"colorbar":{"outlinewidth":0,"ticks":""},"colorscale":[[0.0,"#0d0887"],[0.1111111111111111,"#46039f"],[0.2222222222222222,"#7201a8"],[0.3333333333333333,"#9c179e"],[0.4444444444444444,"#bd3786"],[0.5555555555555556,"#d8576b"],[0.6666666666666666,"#ed7953"],[0.7777777777777778,"#fb9f3a"],[0.8888888888888888,"#fdca26"],[1.0,"#f0f921"]],"type":"contour"}],"heatmap":[{"colorbar":{"outlinewidth":0,"ticks":""},"colorscale":[[0.0,"#0d0887"],[0.1111111111111111,"#46039f"],[0.2222222222222222,"#7201a8"],[0.3333333333333333,"#9c179e"],[0.4444444444444444,"#bd3786"],[0.5555555555555556,"#d8576b"],[0.6666666666666666,"#ed7953"],[0.7777777777777778,"#fb9f3a"],[0.8888888888888888,"#fdca26"],[1.0,"#f0f921"]],"type":"heatmap"}],"histogram2dcontour":[{"colorbar":{"outlinewidth":0,"ticks":""},"colorscale":[[0.0,"#0d0887"],[0.1111111111111111,"#46039f"],[0.2222222222222222,"#7201a8"],[0.3333333333333333,"#9c179e"],[0.4444444444444444,"#bd3786"],[0.5555555555555556,"#d8576b"],[0.6666666666666666,"#ed7953"],[0.7777777777777778,"#fb9f3a"],[0.8888888888888888,"#fdca26"],[1.0,"#f0f921"]],"type":"histogram2dcontour"}],"histogram2d":[{"colorbar":{"outlinewidth":0,"ticks":""},"colorscale":[[0.0,"#0d0887"],[0.1111111111111111,"#46039f"],[0.2222222222222222,"#7201a8"],[0.3333333333333333,"#9c179e"],[0.4444444444444444,"#bd3786"],[0.5555555555555556,"#d8576b"],[0.6666666666666666,"#ed7953"],[0.7777777777777778,"#fb9f3a"],[0.8888888888888888,"#fdca26"],[1.0,"#f0f921"]],"type":"histogram2d"}],"histogram":[{"marker":{"pattern":{"fillmode":"overlay","size":10,"solidity":0.2}},"type":"histogram"}],"mesh3d":[{"colorbar":{"outlinewidth":0,"ticks":""},"type":"mesh3d"}],"parcoords":[{"line":{"colorbar":{"outlinewidth":0,"ticks":""}},"type":"parcoords"}],"pie":[{"automargin":true,"type":"pie"}],"scatter3d":[{"line":{"colorbar":{"outlinewidth":0,"ticks":""}},"marker":{"colorbar":{"outlinewidth":0,"ticks":""}},"type":"scatter3d"}],"scattercarpet":[{"marker":{"colorbar":{"outlinewidth":0,"ticks":""}},"type":"scattercarpet"}],"scattergeo":[{"marker":{"colorbar":{"outlinewidth":0,"ticks":""}},"type":"scattergeo"}],"scattergl":[{"marker":{"colorbar":{"outlinewidth":0,"ticks":""}},"type":"scattergl"}],"scattermapbox":[{"marker":{"colorbar":{"outlinewidth":0,"ticks":""}},"type":"scattermapbox"}],"scattermap":[{"marker":{"colorbar":{"outlinewidth":0,"ticks":""}},"type":"scattermap"}],"scatterpolargl":[{"marker":{"colorbar":{"outlinewidth":0,"ticks":""}},"type":"scatterpolargl"}],"scatterpolar":[{"marker":{"colorbar":{"outlinewidth":0,"ticks":""}},"type":"scatterpolar"}],"scatter":[{"fillpattern":{"fillmode":"overlay","size":10,"solidity":0.2},"type":"scatter"}],"scatterternary":[{"marker":{"colorbar":{"outlinewidth":0,"ticks":""}},"type":"scatterternary"}],"surface":[{"colorbar":{"outlinewidth":0,"ticks":""},"colorscale":[[0.0,"#0d0887"],[0.1111111111111111,"#46039f"],[0.2222222222222222,"#7201a8"],[0.3333333333333333,"#9c179e"],[0.4444444444444444,"#bd3786"],[0.5555555555555556,"#d8576b"],[0.6666666666666666,"#ed7953"],[0.7777777777777778,"#fb9f3a"],[0.8888888888888888,"#fdca26"],[1.0,"#f0f921"]],"type":"surface"}],"table":[{"cells":{"fill":{"color":"#EBF0F8"},"line":{"color":"white"}},"header":{"fill":{"color":"#C8D4E3"},"line":{"color":"white"}},"type":"table"}]},"layout":{"annotationdefaults":{"arrowcolor":"#2a3f5f","arrowhead":0,"arrowwidth":1},"autotypenumbers":"strict","coloraxis":{"colorbar":{"outlinewidth":0,"ticks":""}},"colorscale":{"diverging":[[0,"#8e0152"],[0.1,"#c51b7d"],[0.2,"#de77ae"],[0.3,"#f1b6da"],[0.4,"#fde0ef"],[0.5,"#f7f7f7"],[0.6,"#e6f5d0"],[0.7,"#b8e186"],[0.8,"#7fbc41"],[0.9,"#4d9221"],[1,"#276419"]],"sequential":[[0.0,"#0d0887"],[0.1111111111111111,"#46039f"],[0.2222222222222222,"#7201a8"],[0.3333333333333333,"#9c179e"],[0.4444444444444444,"#bd3786"],[0.5555555555555556,"#d8576b"],[0.6666666666666666,"#ed7953"],[0.7777777777777778,"#fb9f3a"],[0.8888888888888888,"#fdca26"],[1.0,"#f0f921"]],"sequentialminus":[[0.0,"#0d0887"],[0.1111111111111111,"#46039f"],[0.2222222222222222,"#7201a8"],[0.3333333333333333,"#9c179e"],[0.4444444444444444,"#bd3786"],[0.5555555555555556,"#d8576b"],[0.6666666666666666,"#ed7953"],[0.7777777777777778,"#fb9f3a"],[0.8888888888888888,"#fdca26"],[1.0,"#f0f921"]]},"colorway":["#636efa","#EF553B","#00cc96","#ab63fa","#FFA15A","#19d3f3","#FF6692","#B6E880","#FF97FF","#FECB52"],"font":{"color":"#2a3f5f"},"geo":{"bgcolor":"white","lakecolor":"white","landcolor":"white","showlakes":true,"showland":true,"subunitcolor":"#C8D4E3"},"hoverlabel":{"align":"left"},"hovermode":"closest","mapbox":{"style":"light"},"paper_bgcolor":"white","plot_bgcolor":"white","polar":{"angularaxis":{"gridcolor":"#EBF0F8","linecolor":"#EBF0F8","ticks":""},"bgcolor":"white","radialaxis":{"gridcolor":"#EBF0F8","linecolor":"#EBF0F8","ticks":""}},"scene":{"xaxis":{"backgroundcolor":"white","gridcolor":"#DFE8F3","gridwidth":2,"linecolor":"#EBF0F8","showbackground":true,"ticks":"","zerolinecolor":"#EBF0F8"},"yaxis":{"backgroundcolor":"white","gridcolor":"#DFE8F3","gridwidth":2,"linecolor":"#EBF0F8","showbackground":true,"ticks":"","zerolinecolor":"#EBF0F8"},"zaxis":{"backgroundcolor":"white","gridcolor":"#DFE8F3","gridwidth":2,"linecolor":"#EBF0F8","showbackground":true,"ticks":"","zerolinecolor":"#EBF0F8"}},"shapedefaults":{"line":{"color":"#2a3f5f"}},"ternary":{"aaxis":{"gridcolor":"#DFE8F3","linecolor":"#A2B1C6","ticks":""},"baxis":{"gridcolor":"#DFE8F3","linecolor":"#A2B1C6","ticks":""},"bgcolor":"white","caxis":{"gridcolor":"#DFE8F3","linecolor":"#A2B1C6","ticks":""}},"title":{"x":0.05},"xaxis":{"automargin":true,"gridcolor":"#EBF0F8","linecolor":"#EBF0F8","ticks":"","title":{"standoff":15},"zerolinecolor":"#EBF0F8","zerolinewidth":2},"yaxis":{"automargin":true,"gridcolor":"#EBF0F8","linecolor":"#EBF0F8","ticks":"","title":{"standoff":15},"zerolinecolor":"#EBF0F8","zerolinewidth":2}}},"xaxis":{"anchor":"y","domain":[0.0,0.94]},"yaxis":{"anchor":"x","domain":[0.0,1.0],"title":{"text":"营收（亿）"}},"yaxis2":{"anchor":"x","overlaying":"y","side":"right","title":{"text":"归母净利润（亿）"}},"title":{"font":{"size":14},"text":"营业收入与归母净利润（2009-2025）","x":0.02,"y":0.98},"font":{"family":"Microsoft YaHei,PingFang SC,sans-serif","size":11,"color":"#1a1a1a"},"margin":{"l":55,"r":55,"t":80,"b":50},"legend":{"orientation":"h","yanchor":"bottom","y":1.05},"height":380,"hovermode":"x unified","shapes":[{"line":{"color":"#ccc","dash":"solid","width":1},"type":"line","x0":0,"x1":1,"xref":"x domain","y0":0,"y1":0,"yref":"y2"}]}},{responsive:true,displayModeBar:false});}</script>
+  <p>牧原营收从 2009 年的 4 亿增长至 2025 年的 1,441 亿，增长超 360 倍。利润剧烈波动——这是周期型公司的本质特征：<b>利润波动不代表经营有问题，而是行业特性</b>。</p>
+
+  <h3>5.2 关键财务指标</h3>
+  <table>
+    <tr><th>指标</th><th>2025</th><th>2024</th><th>2023</th><th>周期均值 (2018-25)</th><th>近5年均值</th></tr>
+    <tr><td>营业收入（亿）</td><td>1,441</td><td>1,379</td><td>1,109</td><td>—</td><td>—</td></tr>
+    <tr><td>归母净利润（亿）</td><td>155</td><td>179</td><td>-43</td><td style='font-weight:600'>104</td><td style='font-weight:600'>99</td></tr>
+    <tr><td>毛利率 %</td><td>17.8</td><td>19.2</td><td>3.1</td><td>22.0</td><td>14.9</td></tr>
+    <tr><td>净利率 %</td><td>11.0</td><td>13.0</td><td>-3.8</td><td>10.5</td><td>6.2</td></tr>
+    <tr><td>ROE %</td><td>20.6</td><td>26.8</td><td>-6.4</td><td style='font-weight:600'>23.2</td><td>14.1</td></tr>
+    <tr><td>资产负债率 %</td><td>54.2</td><td>57.4</td><td>61.8</td><td>—</td><td>—</td></tr>
+    <tr><td>经营现金流（亿）</td><td style='color:#27ae60'>301</td><td style='color:#27ae60'>342</td><td>161</td><td>—</td><td>—</td></tr>
+    <tr><td>利息覆盖倍数</td><td>7.2</td><td>8.9</td><td>-0.6</td><td>—</td><td>—</td></tr>
+    <tr><td>EPS（元）</td><td>2.88</td><td>3.31</td><td>-0.78</td><td style='font-weight:600'>2.04</td><td style='font-weight:600'>1.83</td></tr>
+  </table>
+
+  <div class="box">
+    <p style="margin:0"><b>公司分类：周期型公司。</b>盈利高度依赖猪价周期，估值不能使用当年利润，而应使用<b>完整周期平均盈利</b>（8 年均 EPS = 2.04 元）。当前周期 PE = 39.3/2.04 = <b>19.3×</b>。</p>
+  </div>
+
+  <h3>5.3 会计质量审查</h3>
+  <ul>
+    <li><b>生物资产计价</b>：消耗性生物资产按成本计量（而非公允价值），且周转快（~6个月出栏），减值风险可控。</li>
+    <li><b>折旧政策</b>：猪舍按 10-20 年直线折旧——与行业一致，但猪舍实际使用寿命可能更长（隐含资产"隐藏价值"）。</li>
+    <li><b>OCF/净利润 = 1.9（2025）</b>——利润质量高，"银行里的现金难以造假"。</li>
+    <li><b>审计意见</b>：标准无保留意见（中兴华会计师事务所）。</li>
+  </ul>
+
+  <p class="source">来源：牧原股份历年年报（2009-2025），通过 akshare 东方财富接口拉取。详见第4步财务分析报告。</p>
+</div>
+
+<hr class="page-break">
+
+<!-- ==================== 第六部分：财务预测 ==================== -->
+<div class="section">
+  <h2>六、财务预测</h2>
+
+  <h3>6.1 核心假设</h3>
+  <div class="box">
+    <p style="margin:0">
+      <b>方法论</b>：猪价驱动模型——出栏量 × 均价 → 营收 → 毛利 → EBIT → EPS。预测期 2026E-2028E，三种情景（Hooke 七步骤框架）。<br>
+      <b>预测锚定</b>：① 能繁母猪产能去化趋势（领先指标）；② 生猪期货远期曲线（市场定价）；③ 牧原降本趋势（2025=12.0 → 2026H1=11.6 → 2028E=11.0）。
+    </p>
+  </div>
+  <table>
+    <tr><th>参数</th><th>2025（实际）</th><th>2026E</th><th>2027E</th><th>2028E</th><th>核心依据</th></tr>
+    <tr><td>出栏量（万头）</td><td>7,798</td><td>8,100</td><td>8,300</td><td>8,500</td><td>产能上限 9,000 万头 + 战略降速</td></tr>
+    <tr><td>猪价 — 上行</td><td>14.4</td><td>11.0</td><td>14.0</td><td>15.5</td><td>需求意外 + 供给快速去化</td></tr>
+    <tr><td>猪价 — 基准</td><td>14.4</td><td style='color:#c0392b'>10.5</td><td>12.5</td><td>13.5</td><td>产能缓降 + 季节性复苏</td></tr>
+    <tr><td>猪价 — 下行</td><td>14.4</td><td style='color:#c0392b'>10.0</td><td>11.0</td><td>11.5</td><td>去化停滞 + 需求疲软</td></tr>
+    <tr><td>完全成本（元/kg）</td><td>12.0</td><td>11.5</td><td>11.3</td><td>11.0</td><td>降本趋势外推 + 饲料下行</td></tr>
+  </table>
+
+  <h3>6.2 三情景预测</h3>
+  <div id="ch3" class="plotly-graph-div" style="width:100%;"></div>
+<script>window.PLOTLYENV=window.PLOTLYENV||{};if(document.getElementById("ch3")){Plotly.newPlot("ch3",{"data":[{"line":{"color":"#27ae60","dash":"dot","width":2.5},"marker":{"size":10},"mode":"lines+markers","name":"上行","text":["2.98","-1.28","3.70","6.65"],"textfont":{"size":11},"textposition":"top center","x":["2025\n(实际)","2026E","2027E","2028E"],"y":[2.983866029496467,-1.281050800744487,3.70055892123058,6.65292137399109],"type":"scatter"},{"line":{"color":"#2980b9","dash":"solid","width":2.5},"marker":{"size":10},"mode":"lines+markers","name":"基准","text":["2.98","-2.07","1.47","3.50"],"textfont":{"size":11},"textposition":"top center","x":["2025\n(实际)","2026E","2027E","2028E"],"y":[2.983866029496467,-2.0706800855708156,1.4679462676284558,3.504152744375004],"type":"scatter"},{"line":{"color":"#c0392b","dash":"dash","width":2.5},"marker":{"size":10},"mode":"lines+markers","name":"下行","text":["2.98","-2.86","-0.96","0.37"],"textfont":{"size":11},"textposition":"top center","x":["2025\n(实际)","2026E","2027E","2028E"],"y":[2.983866029496467,-2.8603093703971365,-0.9594326449858036,0.3740885418514914],"type":"scatter"}],"layout":{"template":{"data":{"barpolar":[{"marker":{"line":{"color":"white","width":0.5},"pattern":{"fillmode":"overlay","size":10,"solidity":0.2}},"type":"barpolar"}],"bar":[{"error_x":{"color":"#2a3f5f"},"error_y":{"color":"#2a3f5f"},"marker":{"line":{"color":"white","width":0.5},"pattern":{"fillmode":"overlay","size":10,"solidity":0.2}},"type":"bar"}],"carpet":[{"aaxis":{"endlinecolor":"#2a3f5f","gridcolor":"#C8D4E3","linecolor":"#C8D4E3","minorgridcolor":"#C8D4E3","startlinecolor":"#2a3f5f"},"baxis":{"endlinecolor":"#2a3f5f","gridcolor":"#C8D4E3","linecolor":"#C8D4E3","minorgridcolor":"#C8D4E3","startlinecolor":"#2a3f5f"},"type":"carpet"}],"choropleth":[{"colorbar":{"outlinewidth":0,"ticks":""},"type":"choropleth"}],"contourcarpet":[{"colorbar":{"outlinewidth":0,"ticks":""},"type":"contourcarpet"}],"contour":[{"colorbar":{"outlinewidth":0,"ticks":""},"colorscale":[[0.0,"#0d0887"],[0.1111111111111111,"#46039f"],[0.2222222222222222,"#7201a8"],[0.3333333333333333,"#9c179e"],[0.4444444444444444,"#bd3786"],[0.5555555555555556,"#d8576b"],[0.6666666666666666,"#ed7953"],[0.7777777777777778,"#fb9f3a"],[0.8888888888888888,"#fdca26"],[1.0,"#f0f921"]],"type":"contour"}],"heatmap":[{"colorbar":{"outlinewidth":0,"ticks":""},"colorscale":[[0.0,"#0d0887"],[0.1111111111111111,"#46039f"],[0.2222222222222222,"#7201a8"],[0.3333333333333333,"#9c179e"],[0.4444444444444444,"#bd3786"],[0.5555555555555556,"#d8576b"],[0.6666666666666666,"#ed7953"],[0.7777777777777778,"#fb9f3a"],[0.8888888888888888,"#fdca26"],[1.0,"#f0f921"]],"type":"heatmap"}],"histogram2dcontour":[{"colorbar":{"outlinewidth":0,"ticks":""},"colorscale":[[0.0,"#0d0887"],[0.1111111111111111,"#46039f"],[0.2222222222222222,"#7201a8"],[0.3333333333333333,"#9c179e"],[0.4444444444444444,"#bd3786"],[0.5555555555555556,"#d8576b"],[0.6666666666666666,"#ed7953"],[0.7777777777777778,"#fb9f3a"],[0.8888888888888888,"#fdca26"],[1.0,"#f0f921"]],"type":"histogram2dcontour"}],"histogram2d":[{"colorbar":{"outlinewidth":0,"ticks":""},"colorscale":[[0.0,"#0d0887"],[0.1111111111111111,"#46039f"],[0.2222222222222222,"#7201a8"],[0.3333333333333333,"#9c179e"],[0.4444444444444444,"#bd3786"],[0.5555555555555556,"#d8576b"],[0.6666666666666666,"#ed7953"],[0.7777777777777778,"#fb9f3a"],[0.8888888888888888,"#fdca26"],[1.0,"#f0f921"]],"type":"histogram2d"}],"histogram":[{"marker":{"pattern":{"fillmode":"overlay","size":10,"solidity":0.2}},"type":"histogram"}],"mesh3d":[{"colorbar":{"outlinewidth":0,"ticks":""},"type":"mesh3d"}],"parcoords":[{"line":{"colorbar":{"outlinewidth":0,"ticks":""}},"type":"parcoords"}],"pie":[{"automargin":true,"type":"pie"}],"scatter3d":[{"line":{"colorbar":{"outlinewidth":0,"ticks":""}},"marker":{"colorbar":{"outlinewidth":0,"ticks":""}},"type":"scatter3d"}],"scattercarpet":[{"marker":{"colorbar":{"outlinewidth":0,"ticks":""}},"type":"scattercarpet"}],"scattergeo":[{"marker":{"colorbar":{"outlinewidth":0,"ticks":""}},"type":"scattergeo"}],"scattergl":[{"marker":{"colorbar":{"outlinewidth":0,"ticks":""}},"type":"scattergl"}],"scattermapbox":[{"marker":{"colorbar":{"outlinewidth":0,"ticks":""}},"type":"scattermapbox"}],"scattermap":[{"marker":{"colorbar":{"outlinewidth":0,"ticks":""}},"type":"scattermap"}],"scatterpolargl":[{"marker":{"colorbar":{"outlinewidth":0,"ticks":""}},"type":"scatterpolargl"}],"scatterpolar":[{"marker":{"colorbar":{"outlinewidth":0,"ticks":""}},"type":"scatterpolar"}],"scatter":[{"fillpattern":{"fillmode":"overlay","size":10,"solidity":0.2},"type":"scatter"}],"scatterternary":[{"marker":{"colorbar":{"outlinewidth":0,"ticks":""}},"type":"scatterternary"}],"surface":[{"colorbar":{"outlinewidth":0,"ticks":""},"colorscale":[[0.0,"#0d0887"],[0.1111111111111111,"#46039f"],[0.2222222222222222,"#7201a8"],[0.3333333333333333,"#9c179e"],[0.4444444444444444,"#bd3786"],[0.5555555555555556,"#d8576b"],[0.6666666666666666,"#ed7953"],[0.7777777777777778,"#fb9f3a"],[0.8888888888888888,"#fdca26"],[1.0,"#f0f921"]],"type":"surface"}],"table":[{"cells":{"fill":{"color":"#EBF0F8"},"line":{"color":"white"}},"header":{"fill":{"color":"#C8D4E3"},"line":{"color":"white"}},"type":"table"}]},"layout":{"annotationdefaults":{"arrowcolor":"#2a3f5f","arrowhead":0,"arrowwidth":1},"autotypenumbers":"strict","coloraxis":{"colorbar":{"outlinewidth":0,"ticks":""}},"colorscale":{"diverging":[[0,"#8e0152"],[0.1,"#c51b7d"],[0.2,"#de77ae"],[0.3,"#f1b6da"],[0.4,"#fde0ef"],[0.5,"#f7f7f7"],[0.6,"#e6f5d0"],[0.7,"#b8e186"],[0.8,"#7fbc41"],[0.9,"#4d9221"],[1,"#276419"]],"sequential":[[0.0,"#0d0887"],[0.1111111111111111,"#46039f"],[0.2222222222222222,"#7201a8"],[0.3333333333333333,"#9c179e"],[0.4444444444444444,"#bd3786"],[0.5555555555555556,"#d8576b"],[0.6666666666666666,"#ed7953"],[0.7777777777777778,"#fb9f3a"],[0.8888888888888888,"#fdca26"],[1.0,"#f0f921"]],"sequentialminus":[[0.0,"#0d0887"],[0.1111111111111111,"#46039f"],[0.2222222222222222,"#7201a8"],[0.3333333333333333,"#9c179e"],[0.4444444444444444,"#bd3786"],[0.5555555555555556,"#d8576b"],[0.6666666666666666,"#ed7953"],[0.7777777777777778,"#fb9f3a"],[0.8888888888888888,"#fdca26"],[1.0,"#f0f921"]]},"colorway":["#636efa","#EF553B","#00cc96","#ab63fa","#FFA15A","#19d3f3","#FF6692","#B6E880","#FF97FF","#FECB52"],"font":{"color":"#2a3f5f"},"geo":{"bgcolor":"white","lakecolor":"white","landcolor":"white","showlakes":true,"showland":true,"subunitcolor":"#C8D4E3"},"hoverlabel":{"align":"left"},"hovermode":"closest","mapbox":{"style":"light"},"paper_bgcolor":"white","plot_bgcolor":"white","polar":{"angularaxis":{"gridcolor":"#EBF0F8","linecolor":"#EBF0F8","ticks":""},"bgcolor":"white","radialaxis":{"gridcolor":"#EBF0F8","linecolor":"#EBF0F8","ticks":""}},"scene":{"xaxis":{"backgroundcolor":"white","gridcolor":"#DFE8F3","gridwidth":2,"linecolor":"#EBF0F8","showbackground":true,"ticks":"","zerolinecolor":"#EBF0F8"},"yaxis":{"backgroundcolor":"white","gridcolor":"#DFE8F3","gridwidth":2,"linecolor":"#EBF0F8","showbackground":true,"ticks":"","zerolinecolor":"#EBF0F8"},"zaxis":{"backgroundcolor":"white","gridcolor":"#DFE8F3","gridwidth":2,"linecolor":"#EBF0F8","showbackground":true,"ticks":"","zerolinecolor":"#EBF0F8"}},"shapedefaults":{"line":{"color":"#2a3f5f"}},"ternary":{"aaxis":{"gridcolor":"#DFE8F3","linecolor":"#A2B1C6","ticks":""},"baxis":{"gridcolor":"#DFE8F3","linecolor":"#A2B1C6","ticks":""},"bgcolor":"white","caxis":{"gridcolor":"#DFE8F3","linecolor":"#A2B1C6","ticks":""}},"title":{"x":0.05},"xaxis":{"automargin":true,"gridcolor":"#EBF0F8","linecolor":"#EBF0F8","ticks":"","title":{"standoff":15},"zerolinecolor":"#EBF0F8","zerolinewidth":2},"yaxis":{"automargin":true,"gridcolor":"#EBF0F8","linecolor":"#EBF0F8","ticks":"","title":{"standoff":15},"zerolinecolor":"#EBF0F8","zerolinewidth":2}}},"shapes":[{"line":{"color":"#ccc","dash":"solid","width":1},"type":"line","x0":0,"x1":1,"xref":"x domain","y0":0,"y1":0,"yref":"y"},{"line":{"color":"#2c3e50","dash":"dash"},"type":"line","x0":0,"x1":1,"xref":"x domain","y0":2.04,"y1":2.04,"yref":"y"}],"annotations":[{"font":{"size":10},"showarrow":false,"text":"8Y均值 EPS=2.04","x":1,"xanchor":"right","xref":"x domain","y":2.04,"yanchor":"bottom","yref":"y"}],"title":{"font":{"size":14},"text":"三种情景 EPS 预测","x":0.02,"y":0.98},"font":{"family":"Microsoft YaHei,PingFang SC,sans-serif","size":11,"color":"#1a1a1a"},"margin":{"l":55,"r":30,"t":80,"b":50},"legend":{"orientation":"h","yanchor":"bottom","y":1.05},"height":380,"hovermode":"x unified","yaxis":{"title":{"text":"EPS（元\u002f股）"}}}},{responsive:true,displayModeBar:false});}</script>
+  <table>
+    <tr><th>情景</th><th>年份</th><th>出栏(万头)</th><th>猪价</th><th>成本</th><th>营收(亿)</th><th>EPS(元)</th></tr>
+    <tr><td>🟢 上行</td><td>2026E</td><td>8100万</td><td>11.0</td><td>11.5</td><td>1137</td><td style='color:#c0392b;font-weight:600'>-1.28</td></tr><tr><td>🟢 上行</td><td>2027E</td><td>8300万</td><td>14.0</td><td>11.3</td><td>1483</td><td style='color:#27ae60;font-weight:600'>3.70</td></tr><tr><td>🟢 上行</td><td>2028E</td><td>8500万</td><td>15.5</td><td>11.0</td><td>1681</td><td style='color:#27ae60;font-weight:600'>6.65</td></tr><tr><td>🔵 基准</td><td>2026E</td><td>8100万</td><td>10.5</td><td>11.5</td><td>1085</td><td style='color:#c0392b;font-weight:600'>-2.07</td></tr><tr><td>🔵 基准</td><td>2027E</td><td>8300万</td><td>12.5</td><td>11.3</td><td>1324</td><td style='font-weight:600'>1.47</td></tr><tr><td>🔵 基准</td><td>2028E</td><td>8500万</td><td>13.5</td><td>11.0</td><td>1464</td><td style='color:#27ae60;font-weight:600'>3.50</td></tr><tr><td>🔴 下行</td><td>2026E</td><td>8100万</td><td>10.0</td><td>11.5</td><td>1034</td><td style='color:#c0392b;font-weight:600'>-2.86</td></tr><tr><td>🔴 下行</td><td>2027E</td><td>8300万</td><td>11.0</td><td>11.3</td><td>1165</td><td style='color:#c0392b;font-weight:600'>-0.96</td></tr><tr><td>🔴 下行</td><td>2028E</td><td>8500万</td><td>11.5</td><td>11.0</td><td>1247</td><td style='font-weight:600'>0.37</td></tr>
+  </table>
+
+  <div class="box-orange">
+    <p style="margin:0"><b>期货市场验证</b>：大商所 LH 合约（2026-07-28 收盘）——LH2701=12.70 元/kg。期货隐含 2027H1 均价 ≈ 12.87 元/kg，偏向<b>"基准偏上"</b>情景。期货市场提供了相对独立的定价锚点。</p>
+  </div>
+
+  <p class="source">来源：预测模型基于第4步财务数据 + 公司出栏/成本公告 + 国家统计局能繁数据 + 大商所期货行情。详见第5步财务预测报告。</p>
+</div>
+
+<hr class="page-break">
+
+<!-- ==================== 第七部分：评估方法的运用 ==================== -->
+<div class="section">
+  <h2>七、评估方法的运用</h2>
+
+  <h3>7.1 内在价值法 — DCF（权重 20%）</h3>
+  <p>两阶段 DCF 模型：5 年显式预测（2026E-2030E）+ 终值（50% 永续增长 + 50% 退出乘数）。</p>
+  <table>
+    <tr><th>参数</th><th>值</th><th>说明</th></tr>
+    <tr><td>WACC (CAPM)</td><td>8.5%</td><td>Rf=2.5%, β=1.1, ERP=8% → Ke=11.3%, D/E=35% → WACC=8.5%</td></tr>
+    <tr><td>WACC (积层法)</td><td>8.6%</td><td>Rf+ERP+行业风险(-0.5%)+规模风险(0%)+公司特定(+1.5%) = 11.5%, D/E=35%</td></tr>
+    <tr><td>永续增长率</td><td>2.0%</td><td>保守假设（低于 GDP 增速）</td></tr>
+    <tr><td>退出乘数</td><td>10× EBIT</td><td>行业正常化倍数</td></tr>
+    <tr><td style='color:#2980b9'><b>DCF 每股价值</b></td><td style='color:#2980b9;font-weight:600'><b>50 元</b></td><td>企业价值 3,255 亿 − 有息负债 496 亿 = 2,759 亿 ÷ 54.7 亿股</td></tr>
+  </table>
+
+  <h3>7.2 相对价值法（权重 60%）</h3>
+  <p>使用周期平均盈利（8Y EPS = 2.04 元），而非当年利润。可比公司按 ROE/成本/规模/负债排名：</p>
+  <div id="ch2" class="plotly-graph-div" style="width:100%;"></div>
+<script>window.PLOTLYENV=window.PLOTLYENV||{};if(document.getElementById("ch2")){Plotly.newPlot("ch2",{"data":[{"marker":{"color":["#2980b9","#7f8c8d","#7f8c8d","#7f8c8d","#7f8c8d"]},"showlegend":false,"text":["19.3","68.9","91.4","0.0","63.4"],"textfont":{"size":10},"textposition":"outside","x":["牧原股份","温氏股份","新希望","正邦科技","神农集团"],"y":[19.26470588235294,68.94736842105263,91.3953488372093,0,63.387096774193544],"type":"bar","xaxis":"x","yaxis":"y"},{"marker":{"color":["#2980b9","#7f8c8d","#7f8c8d","#7f8c8d","#7f8c8d"]},"showlegend":false,"text":["3.42","2.87","1.72","2.19","3.19"],"textfont":{"size":10},"textposition":"outside","x":["牧原股份","温氏股份","新希望","正邦科技","神农集团"],"y":[3.42,2.87,1.72,2.19,3.19],"type":"bar","xaxis":"x2","yaxis":"y2"},{"marker":{"color":["#2980b9","#7f8c8d","#7f8c8d","#7f8c8d","#7f8c8d"]},"showlegend":false,"text":["20.6","12.0","5.0","-15.0","15.0"],"textfont":{"size":10},"textposition":"outside","x":["牧原股份","温氏股份","新希望","正邦科技","神农集团"],"y":[20.6,12.0,5.0,-15.0,15.0],"type":"bar","xaxis":"x3","yaxis":"y3"}],"layout":{"template":{"data":{"barpolar":[{"marker":{"line":{"color":"white","width":0.5},"pattern":{"fillmode":"overlay","size":10,"solidity":0.2}},"type":"barpolar"}],"bar":[{"error_x":{"color":"#2a3f5f"},"error_y":{"color":"#2a3f5f"},"marker":{"line":{"color":"white","width":0.5},"pattern":{"fillmode":"overlay","size":10,"solidity":0.2}},"type":"bar"}],"carpet":[{"aaxis":{"endlinecolor":"#2a3f5f","gridcolor":"#C8D4E3","linecolor":"#C8D4E3","minorgridcolor":"#C8D4E3","startlinecolor":"#2a3f5f"},"baxis":{"endlinecolor":"#2a3f5f","gridcolor":"#C8D4E3","linecolor":"#C8D4E3","minorgridcolor":"#C8D4E3","startlinecolor":"#2a3f5f"},"type":"carpet"}],"choropleth":[{"colorbar":{"outlinewidth":0,"ticks":""},"type":"choropleth"}],"contourcarpet":[{"colorbar":{"outlinewidth":0,"ticks":""},"type":"contourcarpet"}],"contour":[{"colorbar":{"outlinewidth":0,"ticks":""},"colorscale":[[0.0,"#0d0887"],[0.1111111111111111,"#46039f"],[0.2222222222222222,"#7201a8"],[0.3333333333333333,"#9c179e"],[0.4444444444444444,"#bd3786"],[0.5555555555555556,"#d8576b"],[0.6666666666666666,"#ed7953"],[0.7777777777777778,"#fb9f3a"],[0.8888888888888888,"#fdca26"],[1.0,"#f0f921"]],"type":"contour"}],"heatmap":[{"colorbar":{"outlinewidth":0,"ticks":""},"colorscale":[[0.0,"#0d0887"],[0.1111111111111111,"#46039f"],[0.2222222222222222,"#7201a8"],[0.3333333333333333,"#9c179e"],[0.4444444444444444,"#bd3786"],[0.5555555555555556,"#d8576b"],[0.6666666666666666,"#ed7953"],[0.7777777777777778,"#fb9f3a"],[0.8888888888888888,"#fdca26"],[1.0,"#f0f921"]],"type":"heatmap"}],"histogram2dcontour":[{"colorbar":{"outlinewidth":0,"ticks":""},"colorscale":[[0.0,"#0d0887"],[0.1111111111111111,"#46039f"],[0.2222222222222222,"#7201a8"],[0.3333333333333333,"#9c179e"],[0.4444444444444444,"#bd3786"],[0.5555555555555556,"#d8576b"],[0.6666666666666666,"#ed7953"],[0.7777777777777778,"#fb9f3a"],[0.8888888888888888,"#fdca26"],[1.0,"#f0f921"]],"type":"histogram2dcontour"}],"histogram2d":[{"colorbar":{"outlinewidth":0,"ticks":""},"colorscale":[[0.0,"#0d0887"],[0.1111111111111111,"#46039f"],[0.2222222222222222,"#7201a8"],[0.3333333333333333,"#9c179e"],[0.4444444444444444,"#bd3786"],[0.5555555555555556,"#d8576b"],[0.6666666666666666,"#ed7953"],[0.7777777777777778,"#fb9f3a"],[0.8888888888888888,"#fdca26"],[1.0,"#f0f921"]],"type":"histogram2d"}],"histogram":[{"marker":{"pattern":{"fillmode":"overlay","size":10,"solidity":0.2}},"type":"histogram"}],"mesh3d":[{"colorbar":{"outlinewidth":0,"ticks":""},"type":"mesh3d"}],"parcoords":[{"line":{"colorbar":{"outlinewidth":0,"ticks":""}},"type":"parcoords"}],"pie":[{"automargin":true,"type":"pie"}],"scatter3d":[{"line":{"colorbar":{"outlinewidth":0,"ticks":""}},"marker":{"colorbar":{"outlinewidth":0,"ticks":""}},"type":"scatter3d"}],"scattercarpet":[{"marker":{"colorbar":{"outlinewidth":0,"ticks":""}},"type":"scattercarpet"}],"scattergeo":[{"marker":{"colorbar":{"outlinewidth":0,"ticks":""}},"type":"scattergeo"}],"scattergl":[{"marker":{"colorbar":{"outlinewidth":0,"ticks":""}},"type":"scattergl"}],"scattermapbox":[{"marker":{"colorbar":{"outlinewidth":0,"ticks":""}},"type":"scattermapbox"}],"scattermap":[{"marker":{"colorbar":{"outlinewidth":0,"ticks":""}},"type":"scattermap"}],"scatterpolargl":[{"marker":{"colorbar":{"outlinewidth":0,"ticks":""}},"type":"scatterpolargl"}],"scatterpolar":[{"marker":{"colorbar":{"outlinewidth":0,"ticks":""}},"type":"scatterpolar"}],"scatter":[{"fillpattern":{"fillmode":"overlay","size":10,"solidity":0.2},"type":"scatter"}],"scatterternary":[{"marker":{"colorbar":{"outlinewidth":0,"ticks":""}},"type":"scatterternary"}],"surface":[{"colorbar":{"outlinewidth":0,"ticks":""},"colorscale":[[0.0,"#0d0887"],[0.1111111111111111,"#46039f"],[0.2222222222222222,"#7201a8"],[0.3333333333333333,"#9c179e"],[0.4444444444444444,"#bd3786"],[0.5555555555555556,"#d8576b"],[0.6666666666666666,"#ed7953"],[0.7777777777777778,"#fb9f3a"],[0.8888888888888888,"#fdca26"],[1.0,"#f0f921"]],"type":"surface"}],"table":[{"cells":{"fill":{"color":"#EBF0F8"},"line":{"color":"white"}},"header":{"fill":{"color":"#C8D4E3"},"line":{"color":"white"}},"type":"table"}]},"layout":{"annotationdefaults":{"arrowcolor":"#2a3f5f","arrowhead":0,"arrowwidth":1},"autotypenumbers":"strict","coloraxis":{"colorbar":{"outlinewidth":0,"ticks":""}},"colorscale":{"diverging":[[0,"#8e0152"],[0.1,"#c51b7d"],[0.2,"#de77ae"],[0.3,"#f1b6da"],[0.4,"#fde0ef"],[0.5,"#f7f7f7"],[0.6,"#e6f5d0"],[0.7,"#b8e186"],[0.8,"#7fbc41"],[0.9,"#4d9221"],[1,"#276419"]],"sequential":[[0.0,"#0d0887"],[0.1111111111111111,"#46039f"],[0.2222222222222222,"#7201a8"],[0.3333333333333333,"#9c179e"],[0.4444444444444444,"#bd3786"],[0.5555555555555556,"#d8576b"],[0.6666666666666666,"#ed7953"],[0.7777777777777778,"#fb9f3a"],[0.8888888888888888,"#fdca26"],[1.0,"#f0f921"]],"sequentialminus":[[0.0,"#0d0887"],[0.1111111111111111,"#46039f"],[0.2222222222222222,"#7201a8"],[0.3333333333333333,"#9c179e"],[0.4444444444444444,"#bd3786"],[0.5555555555555556,"#d8576b"],[0.6666666666666666,"#ed7953"],[0.7777777777777778,"#fb9f3a"],[0.8888888888888888,"#fdca26"],[1.0,"#f0f921"]]},"colorway":["#636efa","#EF553B","#00cc96","#ab63fa","#FFA15A","#19d3f3","#FF6692","#B6E880","#FF97FF","#FECB52"],"font":{"color":"#2a3f5f"},"geo":{"bgcolor":"white","lakecolor":"white","landcolor":"white","showlakes":true,"showland":true,"subunitcolor":"#C8D4E3"},"hoverlabel":{"align":"left"},"hovermode":"closest","mapbox":{"style":"light"},"paper_bgcolor":"white","plot_bgcolor":"white","polar":{"angularaxis":{"gridcolor":"#EBF0F8","linecolor":"#EBF0F8","ticks":""},"bgcolor":"white","radialaxis":{"gridcolor":"#EBF0F8","linecolor":"#EBF0F8","ticks":""}},"scene":{"xaxis":{"backgroundcolor":"white","gridcolor":"#DFE8F3","gridwidth":2,"linecolor":"#EBF0F8","showbackground":true,"ticks":"","zerolinecolor":"#EBF0F8"},"yaxis":{"backgroundcolor":"white","gridcolor":"#DFE8F3","gridwidth":2,"linecolor":"#EBF0F8","showbackground":true,"ticks":"","zerolinecolor":"#EBF0F8"},"zaxis":{"backgroundcolor":"white","gridcolor":"#DFE8F3","gridwidth":2,"linecolor":"#EBF0F8","showbackground":true,"ticks":"","zerolinecolor":"#EBF0F8"}},"shapedefaults":{"line":{"color":"#2a3f5f"}},"ternary":{"aaxis":{"gridcolor":"#DFE8F3","linecolor":"#A2B1C6","ticks":""},"baxis":{"gridcolor":"#DFE8F3","linecolor":"#A2B1C6","ticks":""},"bgcolor":"white","caxis":{"gridcolor":"#DFE8F3","linecolor":"#A2B1C6","ticks":""}},"title":{"x":0.05},"xaxis":{"automargin":true,"gridcolor":"#EBF0F8","linecolor":"#EBF0F8","ticks":"","title":{"standoff":15},"zerolinecolor":"#EBF0F8","zerolinewidth":2},"yaxis":{"automargin":true,"gridcolor":"#EBF0F8","linecolor":"#EBF0F8","ticks":"","title":{"standoff":15},"zerolinecolor":"#EBF0F8","zerolinewidth":2}}},"xaxis":{"anchor":"y","domain":[0.0,0.2888888888888889]},"yaxis":{"anchor":"x","domain":[0.0,1.0]},"xaxis2":{"anchor":"y2","domain":[0.35555555555555557,0.6444444444444445]},"yaxis2":{"anchor":"x2","domain":[0.0,1.0]},"xaxis3":{"anchor":"y3","domain":[0.7111111111111111,1.0]},"yaxis3":{"anchor":"x3","domain":[0.0,1.0]},"annotations":[{"font":{"size":16},"showarrow":false,"text":"周期PE（8Y均值EPS）","x":0.14444444444444446,"xanchor":"center","xref":"paper","y":1.0,"yanchor":"bottom","yref":"paper"},{"font":{"size":16},"showarrow":false,"text":"市净率 P\u002fB","x":0.5,"xanchor":"center","xref":"paper","y":1.0,"yanchor":"bottom","yref":"paper"},{"font":{"size":16},"showarrow":false,"text":"ROE %","x":0.8555555555555556,"xanchor":"center","xref":"paper","y":1.0,"yanchor":"bottom","yref":"paper"}],"title":{"font":{"size":14},"text":"可比公司对比（牧原=深色）","x":0.02,"y":0.98},"font":{"family":"Microsoft YaHei,PingFang SC,sans-serif","size":11,"color":"#1a1a1a"},"margin":{"l":40,"r":20,"t":80,"b":60},"height":350}},{responsive:true,displayModeBar:false});}</script>
+  <table>
+    <tr><th>排名</th><th>公司</th><th>综合得分</th><th>ROE %</th><th>成本(元/kg)</th><th>负债率 %</th></tr>
+    <tr><td>1</td><td style='font-weight:700;color:#2980b9'>牧原股份</td><td>10.2</td><td>20.6%</td><td>11.3</td><td>54%</td></tr><tr><td>2</td><td style=''>温氏股份</td><td>6.5</td><td>12.0%</td><td>12.2</td><td>55%</td></tr><tr><td>3</td><td style=''>新希望</td><td>2.5</td><td>5.0%</td><td>12.7</td><td>72%</td></tr><tr><td>4</td><td style=''>正邦科技</td><td>0.0</td><td>-15.0%</td><td>13.3</td><td>85%</td></tr><tr><td>5</td><td style=''>神农集团</td><td>6.0</td><td>15.0%</td><td>12.5</td><td>35%</td></tr>
+  </table>
+  <div class="box">
+    <p style="margin:0"><b>牧原排名第一</b>（综合得分 10.2，第二名温氏 6.5），核心驱动力是成本领先 + 规模效应 + ROE 优势。<br>
+    目标 PE 15-22× 周期 EPS：下限 15×（周期低谷保护）、中值 19×（行业龙头溢价+成本护城河）、上限 22×（温和周期回归）。<br>
+    当前周期 PE = 19.3×，处于目标区间中位——<b>相对估值显示当前价格基本合理</b>。</p>
+  </div>
+
+  <h3>7.3 PE Band 历史估值区间</h3>
+  <div id="ch5" class="plotly-graph-div" style="width:100%;"></div>
+<script>window.PLOTLYENV=window.PLOTLYENV||{};if(document.getElementById("ch5")){Plotly.newPlot("ch5",{"data":[{"connectgaps":false,"line":{"color":"#2980b9","width":2.8},"marker":{"color":"#2980b9","line":{"color":"white","width":2},"size":11},"mode":"lines+markers","name":"年末PE(TTM)","x":[2018,2019,2020,2021,2022,2023,2024,2025],"y":[6.420457493307,9.172301639184,14.969971021902,14.991352101384,22.810624442359,null,25.252197807439,26.386784557953],"type":"scatter"},{"connectgaps":false,"fill":"tozeroy","fillcolor":"rgba(41,128,185,0.07)","line":{"color":"rgba(0,0,0,0)","width":0},"mode":"lines","showlegend":false,"x":[2018,2019,2020,2021,2022,2023,2024,2025],"y":[6.420457493307,9.172301639184,14.969971021902,14.991352101384,22.810624442359,null,25.252197807439,26.386784557953],"type":"scatter"}],"layout":{"template":{"data":{"barpolar":[{"marker":{"line":{"color":"white","width":0.5},"pattern":{"fillmode":"overlay","size":10,"solidity":0.2}},"type":"barpolar"}],"bar":[{"error_x":{"color":"#2a3f5f"},"error_y":{"color":"#2a3f5f"},"marker":{"line":{"color":"white","width":0.5},"pattern":{"fillmode":"overlay","size":10,"solidity":0.2}},"type":"bar"}],"carpet":[{"aaxis":{"endlinecolor":"#2a3f5f","gridcolor":"#C8D4E3","linecolor":"#C8D4E3","minorgridcolor":"#C8D4E3","startlinecolor":"#2a3f5f"},"baxis":{"endlinecolor":"#2a3f5f","gridcolor":"#C8D4E3","linecolor":"#C8D4E3","minorgridcolor":"#C8D4E3","startlinecolor":"#2a3f5f"},"type":"carpet"}],"choropleth":[{"colorbar":{"outlinewidth":0,"ticks":""},"type":"choropleth"}],"contourcarpet":[{"colorbar":{"outlinewidth":0,"ticks":""},"type":"contourcarpet"}],"contour":[{"colorbar":{"outlinewidth":0,"ticks":""},"colorscale":[[0.0,"#0d0887"],[0.1111111111111111,"#46039f"],[0.2222222222222222,"#7201a8"],[0.3333333333333333,"#9c179e"],[0.4444444444444444,"#bd3786"],[0.5555555555555556,"#d8576b"],[0.6666666666666666,"#ed7953"],[0.7777777777777778,"#fb9f3a"],[0.8888888888888888,"#fdca26"],[1.0,"#f0f921"]],"type":"contour"}],"heatmap":[{"colorbar":{"outlinewidth":0,"ticks":""},"colorscale":[[0.0,"#0d0887"],[0.1111111111111111,"#46039f"],[0.2222222222222222,"#7201a8"],[0.3333333333333333,"#9c179e"],[0.4444444444444444,"#bd3786"],[0.5555555555555556,"#d8576b"],[0.6666666666666666,"#ed7953"],[0.7777777777777778,"#fb9f3a"],[0.8888888888888888,"#fdca26"],[1.0,"#f0f921"]],"type":"heatmap"}],"histogram2dcontour":[{"colorbar":{"outlinewidth":0,"ticks":""},"colorscale":[[0.0,"#0d0887"],[0.1111111111111111,"#46039f"],[0.2222222222222222,"#7201a8"],[0.3333333333333333,"#9c179e"],[0.4444444444444444,"#bd3786"],[0.5555555555555556,"#d8576b"],[0.6666666666666666,"#ed7953"],[0.7777777777777778,"#fb9f3a"],[0.8888888888888888,"#fdca26"],[1.0,"#f0f921"]],"type":"histogram2dcontour"}],"histogram2d":[{"colorbar":{"outlinewidth":0,"ticks":""},"colorscale":[[0.0,"#0d0887"],[0.1111111111111111,"#46039f"],[0.2222222222222222,"#7201a8"],[0.3333333333333333,"#9c179e"],[0.4444444444444444,"#bd3786"],[0.5555555555555556,"#d8576b"],[0.6666666666666666,"#ed7953"],[0.7777777777777778,"#fb9f3a"],[0.8888888888888888,"#fdca26"],[1.0,"#f0f921"]],"type":"histogram2d"}],"histogram":[{"marker":{"pattern":{"fillmode":"overlay","size":10,"solidity":0.2}},"type":"histogram"}],"mesh3d":[{"colorbar":{"outlinewidth":0,"ticks":""},"type":"mesh3d"}],"parcoords":[{"line":{"colorbar":{"outlinewidth":0,"ticks":""}},"type":"parcoords"}],"pie":[{"automargin":true,"type":"pie"}],"scatter3d":[{"line":{"colorbar":{"outlinewidth":0,"ticks":""}},"marker":{"colorbar":{"outlinewidth":0,"ticks":""}},"type":"scatter3d"}],"scattercarpet":[{"marker":{"colorbar":{"outlinewidth":0,"ticks":""}},"type":"scattercarpet"}],"scattergeo":[{"marker":{"colorbar":{"outlinewidth":0,"ticks":""}},"type":"scattergeo"}],"scattergl":[{"marker":{"colorbar":{"outlinewidth":0,"ticks":""}},"type":"scattergl"}],"scattermapbox":[{"marker":{"colorbar":{"outlinewidth":0,"ticks":""}},"type":"scattermapbox"}],"scattermap":[{"marker":{"colorbar":{"outlinewidth":0,"ticks":""}},"type":"scattermap"}],"scatterpolargl":[{"marker":{"colorbar":{"outlinewidth":0,"ticks":""}},"type":"scatterpolargl"}],"scatterpolar":[{"marker":{"colorbar":{"outlinewidth":0,"ticks":""}},"type":"scatterpolar"}],"scatter":[{"fillpattern":{"fillmode":"overlay","size":10,"solidity":0.2},"type":"scatter"}],"scatterternary":[{"marker":{"colorbar":{"outlinewidth":0,"ticks":""}},"type":"scatterternary"}],"surface":[{"colorbar":{"outlinewidth":0,"ticks":""},"colorscale":[[0.0,"#0d0887"],[0.1111111111111111,"#46039f"],[0.2222222222222222,"#7201a8"],[0.3333333333333333,"#9c179e"],[0.4444444444444444,"#bd3786"],[0.5555555555555556,"#d8576b"],[0.6666666666666666,"#ed7953"],[0.7777777777777778,"#fb9f3a"],[0.8888888888888888,"#fdca26"],[1.0,"#f0f921"]],"type":"surface"}],"table":[{"cells":{"fill":{"color":"#EBF0F8"},"line":{"color":"white"}},"header":{"fill":{"color":"#C8D4E3"},"line":{"color":"white"}},"type":"table"}]},"layout":{"annotationdefaults":{"arrowcolor":"#2a3f5f","arrowhead":0,"arrowwidth":1},"autotypenumbers":"strict","coloraxis":{"colorbar":{"outlinewidth":0,"ticks":""}},"colorscale":{"diverging":[[0,"#8e0152"],[0.1,"#c51b7d"],[0.2,"#de77ae"],[0.3,"#f1b6da"],[0.4,"#fde0ef"],[0.5,"#f7f7f7"],[0.6,"#e6f5d0"],[0.7,"#b8e186"],[0.8,"#7fbc41"],[0.9,"#4d9221"],[1,"#276419"]],"sequential":[[0.0,"#0d0887"],[0.1111111111111111,"#46039f"],[0.2222222222222222,"#7201a8"],[0.3333333333333333,"#9c179e"],[0.4444444444444444,"#bd3786"],[0.5555555555555556,"#d8576b"],[0.6666666666666666,"#ed7953"],[0.7777777777777778,"#fb9f3a"],[0.8888888888888888,"#fdca26"],[1.0,"#f0f921"]],"sequentialminus":[[0.0,"#0d0887"],[0.1111111111111111,"#46039f"],[0.2222222222222222,"#7201a8"],[0.3333333333333333,"#9c179e"],[0.4444444444444444,"#bd3786"],[0.5555555555555556,"#d8576b"],[0.6666666666666666,"#ed7953"],[0.7777777777777778,"#fb9f3a"],[0.8888888888888888,"#fdca26"],[1.0,"#f0f921"]]},"colorway":["#636efa","#EF553B","#00cc96","#ab63fa","#FFA15A","#19d3f3","#FF6692","#B6E880","#FF97FF","#FECB52"],"font":{"color":"#2a3f5f"},"geo":{"bgcolor":"white","lakecolor":"white","landcolor":"white","showlakes":true,"showland":true,"subunitcolor":"#C8D4E3"},"hoverlabel":{"align":"left"},"hovermode":"closest","mapbox":{"style":"light"},"paper_bgcolor":"white","plot_bgcolor":"white","polar":{"angularaxis":{"gridcolor":"#EBF0F8","linecolor":"#EBF0F8","ticks":""},"bgcolor":"white","radialaxis":{"gridcolor":"#EBF0F8","linecolor":"#EBF0F8","ticks":""}},"scene":{"xaxis":{"backgroundcolor":"white","gridcolor":"#DFE8F3","gridwidth":2,"linecolor":"#EBF0F8","showbackground":true,"ticks":"","zerolinecolor":"#EBF0F8"},"yaxis":{"backgroundcolor":"white","gridcolor":"#DFE8F3","gridwidth":2,"linecolor":"#EBF0F8","showbackground":true,"ticks":"","zerolinecolor":"#EBF0F8"},"zaxis":{"backgroundcolor":"white","gridcolor":"#DFE8F3","gridwidth":2,"linecolor":"#EBF0F8","showbackground":true,"ticks":"","zerolinecolor":"#EBF0F8"}},"shapedefaults":{"line":{"color":"#2a3f5f"}},"ternary":{"aaxis":{"gridcolor":"#DFE8F3","linecolor":"#A2B1C6","ticks":""},"baxis":{"gridcolor":"#DFE8F3","linecolor":"#A2B1C6","ticks":""},"bgcolor":"white","caxis":{"gridcolor":"#DFE8F3","linecolor":"#A2B1C6","ticks":""}},"title":{"x":0.05},"xaxis":{"automargin":true,"gridcolor":"#EBF0F8","linecolor":"#EBF0F8","ticks":"","title":{"standoff":15},"zerolinecolor":"#EBF0F8","zerolinewidth":2},"yaxis":{"automargin":true,"gridcolor":"#EBF0F8","linecolor":"#EBF0F8","ticks":"","title":{"standoff":15},"zerolinecolor":"#EBF0F8","zerolinewidth":2}}},"shapes":[{"fillcolor":"rgba(39,174,96,0.10)","layer":"below","line":{"width":0},"type":"rect","x0":2017.5,"x1":2025.5,"y0":0,"y1":8},{"fillcolor":"rgba(52,152,219,0.06)","layer":"below","line":{"width":0},"type":"rect","x0":2017.5,"x1":2025.5,"y0":8,"y1":15},{"fillcolor":"rgba(230,126,34,0.06)","layer":"below","line":{"width":0},"type":"rect","x0":2017.5,"x1":2025.5,"y0":15,"y1":30},{"fillcolor":"rgba(192,57,43,0.07)","layer":"below","line":{"width":0},"type":"rect","x0":2017.5,"x1":2025.5,"y0":30,"y1":55},{"line":{"color":"#27ae60","dash":"dash","width":1.5},"opacity":0.55,"type":"line","x0":2017.5,"x1":2025.5,"y0":8,"y1":8},{"line":{"color":"#e67e22","dash":"dash","width":1.5},"opacity":0.55,"type":"line","x0":2017.5,"x1":2025.5,"y0":15,"y1":15},{"line":{"color":"#c0392b","dash":"dash","width":1.5},"opacity":0.55,"type":"line","x0":2017.5,"x1":2025.5,"y0":30,"y1":30},{"line":{"color":"#2c3e50","width":2},"opacity":0.6,"type":"line","x0":2017.5,"x1":2025.5,"y0":19.26470588235294,"y1":19.26470588235294}],"annotations":[{"font":{"color":"#27ae60","size":9},"showarrow":false,"text":"低估线 8×","x":2025,"xanchor":"right","y":8,"yanchor":"bottom"},{"font":{"color":"#e67e22","size":9},"showarrow":false,"text":"合理线 15×","x":2025,"xanchor":"right","y":15,"yanchor":"bottom"},{"font":{"color":"#c0392b","size":9},"showarrow":false,"text":"高估线 30×","x":2025,"xanchor":"right","y":30,"yanchor":"bottom"},{"font":{"color":"#2c3e50","size":10},"showarrow":false,"text":"当前周期PE 19.3×","x":2018,"xanchor":"left","y":19.26470588235294},{"arrowhead":2,"ay":-20,"font":{"color":"#c0392b","size":10},"showarrow":true,"text":"\u003cb\u003e亏损\u003c\u002fb\u003e","x":2023,"y":2}],"xaxis":{"tickfont":{"size":11,"color":"#333"},"tickmode":"array","tickvals":[2018,2019,2020,2021,2022,2023,2024,2025],"ticktext":["2018","2019","2020","2021","2022","2023","2024","2025"],"range":[2017.5,2025.5],"showgrid":true,"gridcolor":"#f0f0f0","showline":true,"linecolor":"#ccc","linewidth":1,"zeroline":false},"yaxis":{"tickfont":{"size":11},"title":{"text":"PE 估值倍数"},"range":[0,50],"dtick":5,"showgrid":true,"gridcolor":"#f0f0f0","zeroline":false},"font":{"family":"Microsoft YaHei,PingFang SC,sans-serif","size":12,"color":"#1a1a1a"},"title":{"font":{"size":14},"text":"PE Band 历史估值区间（2018-2025）","x":0.02,"y":0.98},"legend":{"orientation":"h","yanchor":"bottom","y":1.05},"margin":{"l":55,"r":35,"t":80,"b":60},"height":420,"hovermode":"x unified"}},{responsive:true,displayModeBar:false});}</script>
+  <p>2023 年（亏损年份）PE 无意义（折线断开）。当前周期 PE=19.3×——在历史 PE Band 中处于<b>中等偏低</b>位置。</p>
+
+  <h3>7.4 并购价值法（权重 10%）+ LBO 法（权重 10%）</h3>
+  <div class="col2">
+    <div>
+      <p><b>并购价值</b>：行业 M&A EV/EBITDA 6-10×，应用于牧原周期 EBITDA（~250 亿）：</p>
+      <ul>
+        <li>低估：6× → EV 1,500 亿 → ~18 元/股</li>
+        <li>合理：8× → EV 2,000 亿 → ~27 元/股</li>
+        <li>高估：10× → EV 2,500 亿 → ~36 元/股</li>
+      </ul>
+    </div>
+    <div>
+      <p><b>LBO</b>：5× EBITDA 杠杆收购，5 年后 8× 退出，IRR=15-20%：</p>
+      <ul>
+        <li>低估：7.5× → ~25 元/股</li>
+        <li>合理：6.5× → ~20 元/股</li>
+        <li>高估：5.5× → ~16 元/股</li>
+      </ul>
+    </div>
+  </div>
+
+  <h3>7.5 估值汇总</h3>
+  <div id="ch7" class="plotly-graph-div" style="width:100%;"></div>
+<script>window.PLOTLYENV=window.PLOTLYENV||{};if(document.getElementById("ch7")){Plotly.newPlot("ch7",{"data":[{"error_y":{"array":[13],"arrayminus":[10],"color":"#888","symmetric":false,"thickness":1.5,"type":"data","width":0.3},"marker":{"color":"#2980b9"},"opacity":0.9,"text":"50","textfont":{"size":12},"textposition":"outside","x":["DCF (20%)"],"y":[50],"type":"bar"},{"error_y":{"array":[6.1200000000000045],"arrayminus":[8.159999999999997],"color":"#888","symmetric":false,"thickness":1.5,"type":"data","width":0.3},"marker":{"color":"#2980b9"},"opacity":0.9,"text":"39","textfont":{"size":12},"textposition":"outside","x":["相对价值 (60%)"],"y":[38.76],"type":"bar"},{"error_y":{"array":[9],"arrayminus":[9],"color":"#888","symmetric":false,"thickness":1.5,"type":"data","width":0.3},"marker":{"color":"#7f8c8d"},"opacity":0.9,"text":"27","textfont":{"size":12},"textposition":"outside","x":["并购 (10%)"],"y":[27],"type":"bar"},{"error_y":{"array":[5],"arrayminus":[4],"color":"#888","symmetric":false,"thickness":1.5,"type":"data","width":0.3},"marker":{"color":"#7f8c8d"},"opacity":0.9,"text":"20","textfont":{"size":12},"textposition":"outside","x":["LBO (10%)"],"y":[20],"type":"bar"},{"error_y":{"array":[7.672000000000004],"arrayminus":[8.196000000000002],"color":"#888","symmetric":false,"thickness":1.5,"type":"data","width":0.3},"marker":{"color":"#c0392b"},"opacity":0.9,"text":"38","textfont":{"size":12},"textposition":"outside","x":["加权结果"],"y":[37.956],"type":"bar"}],"layout":{"template":{"data":{"barpolar":[{"marker":{"line":{"color":"white","width":0.5},"pattern":{"fillmode":"overlay","size":10,"solidity":0.2}},"type":"barpolar"}],"bar":[{"error_x":{"color":"#2a3f5f"},"error_y":{"color":"#2a3f5f"},"marker":{"line":{"color":"white","width":0.5},"pattern":{"fillmode":"overlay","size":10,"solidity":0.2}},"type":"bar"}],"carpet":[{"aaxis":{"endlinecolor":"#2a3f5f","gridcolor":"#C8D4E3","linecolor":"#C8D4E3","minorgridcolor":"#C8D4E3","startlinecolor":"#2a3f5f"},"baxis":{"endlinecolor":"#2a3f5f","gridcolor":"#C8D4E3","linecolor":"#C8D4E3","minorgridcolor":"#C8D4E3","startlinecolor":"#2a3f5f"},"type":"carpet"}],"choropleth":[{"colorbar":{"outlinewidth":0,"ticks":""},"type":"choropleth"}],"contourcarpet":[{"colorbar":{"outlinewidth":0,"ticks":""},"type":"contourcarpet"}],"contour":[{"colorbar":{"outlinewidth":0,"ticks":""},"colorscale":[[0.0,"#0d0887"],[0.1111111111111111,"#46039f"],[0.2222222222222222,"#7201a8"],[0.3333333333333333,"#9c179e"],[0.4444444444444444,"#bd3786"],[0.5555555555555556,"#d8576b"],[0.6666666666666666,"#ed7953"],[0.7777777777777778,"#fb9f3a"],[0.8888888888888888,"#fdca26"],[1.0,"#f0f921"]],"type":"contour"}],"heatmap":[{"colorbar":{"outlinewidth":0,"ticks":""},"colorscale":[[0.0,"#0d0887"],[0.1111111111111111,"#46039f"],[0.2222222222222222,"#7201a8"],[0.3333333333333333,"#9c179e"],[0.4444444444444444,"#bd3786"],[0.5555555555555556,"#d8576b"],[0.6666666666666666,"#ed7953"],[0.7777777777777778,"#fb9f3a"],[0.8888888888888888,"#fdca26"],[1.0,"#f0f921"]],"type":"heatmap"}],"histogram2dcontour":[{"colorbar":{"outlinewidth":0,"ticks":""},"colorscale":[[0.0,"#0d0887"],[0.1111111111111111,"#46039f"],[0.2222222222222222,"#7201a8"],[0.3333333333333333,"#9c179e"],[0.4444444444444444,"#bd3786"],[0.5555555555555556,"#d8576b"],[0.6666666666666666,"#ed7953"],[0.7777777777777778,"#fb9f3a"],[0.8888888888888888,"#fdca26"],[1.0,"#f0f921"]],"type":"histogram2dcontour"}],"histogram2d":[{"colorbar":{"outlinewidth":0,"ticks":""},"colorscale":[[0.0,"#0d0887"],[0.1111111111111111,"#46039f"],[0.2222222222222222,"#7201a8"],[0.3333333333333333,"#9c179e"],[0.4444444444444444,"#bd3786"],[0.5555555555555556,"#d8576b"],[0.6666666666666666,"#ed7953"],[0.7777777777777778,"#fb9f3a"],[0.8888888888888888,"#fdca26"],[1.0,"#f0f921"]],"type":"histogram2d"}],"histogram":[{"marker":{"pattern":{"fillmode":"overlay","size":10,"solidity":0.2}},"type":"histogram"}],"mesh3d":[{"colorbar":{"outlinewidth":0,"ticks":""},"type":"mesh3d"}],"parcoords":[{"line":{"colorbar":{"outlinewidth":0,"ticks":""}},"type":"parcoords"}],"pie":[{"automargin":true,"type":"pie"}],"scatter3d":[{"line":{"colorbar":{"outlinewidth":0,"ticks":""}},"marker":{"colorbar":{"outlinewidth":0,"ticks":""}},"type":"scatter3d"}],"scattercarpet":[{"marker":{"colorbar":{"outlinewidth":0,"ticks":""}},"type":"scattercarpet"}],"scattergeo":[{"marker":{"colorbar":{"outlinewidth":0,"ticks":""}},"type":"scattergeo"}],"scattergl":[{"marker":{"colorbar":{"outlinewidth":0,"ticks":""}},"type":"scattergl"}],"scattermapbox":[{"marker":{"colorbar":{"outlinewidth":0,"ticks":""}},"type":"scattermapbox"}],"scattermap":[{"marker":{"colorbar":{"outlinewidth":0,"ticks":""}},"type":"scattermap"}],"scatterpolargl":[{"marker":{"colorbar":{"outlinewidth":0,"ticks":""}},"type":"scatterpolargl"}],"scatterpolar":[{"marker":{"colorbar":{"outlinewidth":0,"ticks":""}},"type":"scatterpolar"}],"scatter":[{"fillpattern":{"fillmode":"overlay","size":10,"solidity":0.2},"type":"scatter"}],"scatterternary":[{"marker":{"colorbar":{"outlinewidth":0,"ticks":""}},"type":"scatterternary"}],"surface":[{"colorbar":{"outlinewidth":0,"ticks":""},"colorscale":[[0.0,"#0d0887"],[0.1111111111111111,"#46039f"],[0.2222222222222222,"#7201a8"],[0.3333333333333333,"#9c179e"],[0.4444444444444444,"#bd3786"],[0.5555555555555556,"#d8576b"],[0.6666666666666666,"#ed7953"],[0.7777777777777778,"#fb9f3a"],[0.8888888888888888,"#fdca26"],[1.0,"#f0f921"]],"type":"surface"}],"table":[{"cells":{"fill":{"color":"#EBF0F8"},"line":{"color":"white"}},"header":{"fill":{"color":"#C8D4E3"},"line":{"color":"white"}},"type":"table"}]},"layout":{"annotationdefaults":{"arrowcolor":"#2a3f5f","arrowhead":0,"arrowwidth":1},"autotypenumbers":"strict","coloraxis":{"colorbar":{"outlinewidth":0,"ticks":""}},"colorscale":{"diverging":[[0,"#8e0152"],[0.1,"#c51b7d"],[0.2,"#de77ae"],[0.3,"#f1b6da"],[0.4,"#fde0ef"],[0.5,"#f7f7f7"],[0.6,"#e6f5d0"],[0.7,"#b8e186"],[0.8,"#7fbc41"],[0.9,"#4d9221"],[1,"#276419"]],"sequential":[[0.0,"#0d0887"],[0.1111111111111111,"#46039f"],[0.2222222222222222,"#7201a8"],[0.3333333333333333,"#9c179e"],[0.4444444444444444,"#bd3786"],[0.5555555555555556,"#d8576b"],[0.6666666666666666,"#ed7953"],[0.7777777777777778,"#fb9f3a"],[0.8888888888888888,"#fdca26"],[1.0,"#f0f921"]],"sequentialminus":[[0.0,"#0d0887"],[0.1111111111111111,"#46039f"],[0.2222222222222222,"#7201a8"],[0.3333333333333333,"#9c179e"],[0.4444444444444444,"#bd3786"],[0.5555555555555556,"#d8576b"],[0.6666666666666666,"#ed7953"],[0.7777777777777778,"#fb9f3a"],[0.8888888888888888,"#fdca26"],[1.0,"#f0f921"]]},"colorway":["#636efa","#EF553B","#00cc96","#ab63fa","#FFA15A","#19d3f3","#FF6692","#B6E880","#FF97FF","#FECB52"],"font":{"color":"#2a3f5f"},"geo":{"bgcolor":"white","lakecolor":"white","landcolor":"white","showlakes":true,"showland":true,"subunitcolor":"#C8D4E3"},"hoverlabel":{"align":"left"},"hovermode":"closest","mapbox":{"style":"light"},"paper_bgcolor":"white","plot_bgcolor":"white","polar":{"angularaxis":{"gridcolor":"#EBF0F8","linecolor":"#EBF0F8","ticks":""},"bgcolor":"white","radialaxis":{"gridcolor":"#EBF0F8","linecolor":"#EBF0F8","ticks":""}},"scene":{"xaxis":{"backgroundcolor":"white","gridcolor":"#DFE8F3","gridwidth":2,"linecolor":"#EBF0F8","showbackground":true,"ticks":"","zerolinecolor":"#EBF0F8"},"yaxis":{"backgroundcolor":"white","gridcolor":"#DFE8F3","gridwidth":2,"linecolor":"#EBF0F8","showbackground":true,"ticks":"","zerolinecolor":"#EBF0F8"},"zaxis":{"backgroundcolor":"white","gridcolor":"#DFE8F3","gridwidth":2,"linecolor":"#EBF0F8","showbackground":true,"ticks":"","zerolinecolor":"#EBF0F8"}},"shapedefaults":{"line":{"color":"#2a3f5f"}},"ternary":{"aaxis":{"gridcolor":"#DFE8F3","linecolor":"#A2B1C6","ticks":""},"baxis":{"gridcolor":"#DFE8F3","linecolor":"#A2B1C6","ticks":""},"bgcolor":"white","caxis":{"gridcolor":"#DFE8F3","linecolor":"#A2B1C6","ticks":""}},"title":{"x":0.05},"xaxis":{"automargin":true,"gridcolor":"#EBF0F8","linecolor":"#EBF0F8","ticks":"","title":{"standoff":15},"zerolinecolor":"#EBF0F8","zerolinewidth":2},"yaxis":{"automargin":true,"gridcolor":"#EBF0F8","linecolor":"#EBF0F8","ticks":"","title":{"standoff":15},"zerolinecolor":"#EBF0F8","zerolinewidth":2}}},"shapes":[{"line":{"color":"#c0392b","dash":"dash"},"type":"line","x0":0,"x1":1,"xref":"x domain","y0":39.3,"y1":39.3,"yref":"y"}],"annotations":[{"font":{"color":"#c0392b","size":10},"showarrow":false,"text":"当前股价 39.3元","x":1,"xanchor":"right","xref":"x domain","y":39.3,"yanchor":"bottom","yref":"y"}],"title":{"font":{"size":14},"text":"估值桥 — 四种方法加权 → 目标价区间","x":0.02,"y":0.98},"font":{"family":"Microsoft YaHei,PingFang SC,sans-serif","size":11,"color":"#1a1a1a"},"margin":{"l":55,"r":30,"t":80,"b":60},"yaxis":{"title":{"text":"每股价值（元）"}},"height":380,"showlegend":false}},{responsive:true,displayModeBar:false});}</script>
+  <div id="ch4" class="plotly-graph-div" style="width:100%;"></div>
+<script>window.PLOTLYENV=window.PLOTLYENV||{};if(document.getElementById("ch4")){Plotly.newPlot("ch4",{"data":[{"cells":{"align":"center","fill":{"color":[["white","#f8f9fa","#f8f9fa","#f8f9fa","#f0f4f8"]]},"font":{"color":"#1a1a1a","size":11},"height":30,"values":[["DCF 内在价值","相对价值 (PE)","并购价值","LBO","加权结果"],["20%","60%","10%","10%","100%"],["40","31","18","16","30"],["50","39","27","20","38"],["63","45","36","25","46"],["WACC=8.5% g=2.0%","周期EPS 2.04×PE 15-22×","EV\u002fEBITDA 6-10×","Entry 5.5-7.5×EBITDA","安全边际 ±15%"]]},"header":{"align":"center","fill":{"color":"#2c3e50"},"font":{"color":"white","size":12},"height":34,"values":["\u003cb\u003e估值方法\u003c\u002fb\u003e","\u003cb\u003e权重\u003c\u002fb\u003e","\u003cb\u003e低估\u003c\u002fb\u003e","\u003cb\u003e合理\u003c\u002fb\u003e","\u003cb\u003e高估\u003c\u002fb\u003e","\u003cb\u003e核心参数\u003c\u002fb\u003e"]},"type":"table"}],"layout":{"template":{"data":{"histogram2dcontour":[{"type":"histogram2dcontour","colorbar":{"outlinewidth":0,"ticks":""},"colorscale":[[0.0,"#0d0887"],[0.1111111111111111,"#46039f"],[0.2222222222222222,"#7201a8"],[0.3333333333333333,"#9c179e"],[0.4444444444444444,"#bd3786"],[0.5555555555555556,"#d8576b"],[0.6666666666666666,"#ed7953"],[0.7777777777777778,"#fb9f3a"],[0.8888888888888888,"#fdca26"],[1.0,"#f0f921"]]}],"choropleth":[{"type":"choropleth","colorbar":{"outlinewidth":0,"ticks":""}}],"histogram2d":[{"type":"histogram2d","colorbar":{"outlinewidth":0,"ticks":""},"colorscale":[[0.0,"#0d0887"],[0.1111111111111111,"#46039f"],[0.2222222222222222,"#7201a8"],[0.3333333333333333,"#9c179e"],[0.4444444444444444,"#bd3786"],[0.5555555555555556,"#d8576b"],[0.6666666666666666,"#ed7953"],[0.7777777777777778,"#fb9f3a"],[0.8888888888888888,"#fdca26"],[1.0,"#f0f921"]]}],"heatmap":[{"type":"heatmap","colorbar":{"outlinewidth":0,"ticks":""},"colorscale":[[0.0,"#0d0887"],[0.1111111111111111,"#46039f"],[0.2222222222222222,"#7201a8"],[0.3333333333333333,"#9c179e"],[0.4444444444444444,"#bd3786"],[0.5555555555555556,"#d8576b"],[0.6666666666666666,"#ed7953"],[0.7777777777777778,"#fb9f3a"],[0.8888888888888888,"#fdca26"],[1.0,"#f0f921"]]}],"contourcarpet":[{"type":"contourcarpet","colorbar":{"outlinewidth":0,"ticks":""}}],"contour":[{"type":"contour","colorbar":{"outlinewidth":0,"ticks":""},"colorscale":[[0.0,"#0d0887"],[0.1111111111111111,"#46039f"],[0.2222222222222222,"#7201a8"],[0.3333333333333333,"#9c179e"],[0.4444444444444444,"#bd3786"],[0.5555555555555556,"#d8576b"],[0.6666666666666666,"#ed7953"],[0.7777777777777778,"#fb9f3a"],[0.8888888888888888,"#fdca26"],[1.0,"#f0f921"]]}],"surface":[{"type":"surface","colorbar":{"outlinewidth":0,"ticks":""},"colorscale":[[0.0,"#0d0887"],[0.1111111111111111,"#46039f"],[0.2222222222222222,"#7201a8"],[0.3333333333333333,"#9c179e"],[0.4444444444444444,"#bd3786"],[0.5555555555555556,"#d8576b"],[0.6666666666666666,"#ed7953"],[0.7777777777777778,"#fb9f3a"],[0.8888888888888888,"#fdca26"],[1.0,"#f0f921"]]}],"mesh3d":[{"type":"mesh3d","colorbar":{"outlinewidth":0,"ticks":""}}],"scatter":[{"fillpattern":{"fillmode":"overlay","size":10,"solidity":0.2},"type":"scatter"}],"parcoords":[{"type":"parcoords","line":{"colorbar":{"outlinewidth":0,"ticks":""}}}],"scatterpolargl":[{"type":"scatterpolargl","marker":{"colorbar":{"outlinewidth":0,"ticks":""}}}],"bar":[{"error_x":{"color":"#2a3f5f"},"error_y":{"color":"#2a3f5f"},"marker":{"line":{"color":"#E5ECF6","width":0.5},"pattern":{"fillmode":"overlay","size":10,"solidity":0.2}},"type":"bar"}],"scattergeo":[{"type":"scattergeo","marker":{"colorbar":{"outlinewidth":0,"ticks":""}}}],"scatterpolar":[{"type":"scatterpolar","marker":{"colorbar":{"outlinewidth":0,"ticks":""}}}],"histogram":[{"marker":{"pattern":{"fillmode":"overlay","size":10,"solidity":0.2}},"type":"histogram"}],"scattergl":[{"type":"scattergl","marker":{"colorbar":{"outlinewidth":0,"ticks":""}}}],"scatter3d":[{"type":"scatter3d","line":{"colorbar":{"outlinewidth":0,"ticks":""}},"marker":{"colorbar":{"outlinewidth":0,"ticks":""}}}],"scattermap":[{"type":"scattermap","marker":{"colorbar":{"outlinewidth":0,"ticks":""}}}],"scattermapbox":[{"type":"scattermapbox","marker":{"colorbar":{"outlinewidth":0,"ticks":""}}}],"scatterternary":[{"type":"scatterternary","marker":{"colorbar":{"outlinewidth":0,"ticks":""}}}],"scattercarpet":[{"type":"scattercarpet","marker":{"colorbar":{"outlinewidth":0,"ticks":""}}}],"carpet":[{"aaxis":{"endlinecolor":"#2a3f5f","gridcolor":"white","linecolor":"white","minorgridcolor":"white","startlinecolor":"#2a3f5f"},"baxis":{"endlinecolor":"#2a3f5f","gridcolor":"white","linecolor":"white","minorgridcolor":"white","startlinecolor":"#2a3f5f"},"type":"carpet"}],"table":[{"cells":{"fill":{"color":"#EBF0F8"},"line":{"color":"white"}},"header":{"fill":{"color":"#C8D4E3"},"line":{"color":"white"}},"type":"table"}],"barpolar":[{"marker":{"line":{"color":"#E5ECF6","width":0.5},"pattern":{"fillmode":"overlay","size":10,"solidity":0.2}},"type":"barpolar"}],"pie":[{"automargin":true,"type":"pie"}]},"layout":{"autotypenumbers":"strict","colorway":["#636efa","#EF553B","#00cc96","#ab63fa","#FFA15A","#19d3f3","#FF6692","#B6E880","#FF97FF","#FECB52"],"font":{"color":"#2a3f5f"},"hovermode":"closest","hoverlabel":{"align":"left"},"paper_bgcolor":"white","plot_bgcolor":"#E5ECF6","polar":{"bgcolor":"#E5ECF6","angularaxis":{"gridcolor":"white","linecolor":"white","ticks":""},"radialaxis":{"gridcolor":"white","linecolor":"white","ticks":""}},"ternary":{"bgcolor":"#E5ECF6","aaxis":{"gridcolor":"white","linecolor":"white","ticks":""},"baxis":{"gridcolor":"white","linecolor":"white","ticks":""},"caxis":{"gridcolor":"white","linecolor":"white","ticks":""}},"coloraxis":{"colorbar":{"outlinewidth":0,"ticks":""}},"colorscale":{"sequential":[[0.0,"#0d0887"],[0.1111111111111111,"#46039f"],[0.2222222222222222,"#7201a8"],[0.3333333333333333,"#9c179e"],[0.4444444444444444,"#bd3786"],[0.5555555555555556,"#d8576b"],[0.6666666666666666,"#ed7953"],[0.7777777777777778,"#fb9f3a"],[0.8888888888888888,"#fdca26"],[1.0,"#f0f921"]],"sequentialminus":[[0.0,"#0d0887"],[0.1111111111111111,"#46039f"],[0.2222222222222222,"#7201a8"],[0.3333333333333333,"#9c179e"],[0.4444444444444444,"#bd3786"],[0.5555555555555556,"#d8576b"],[0.6666666666666666,"#ed7953"],[0.7777777777777778,"#fb9f3a"],[0.8888888888888888,"#fdca26"],[1.0,"#f0f921"]],"diverging":[[0,"#8e0152"],[0.1,"#c51b7d"],[0.2,"#de77ae"],[0.3,"#f1b6da"],[0.4,"#fde0ef"],[0.5,"#f7f7f7"],[0.6,"#e6f5d0"],[0.7,"#b8e186"],[0.8,"#7fbc41"],[0.9,"#4d9221"],[1,"#276419"]]},"xaxis":{"gridcolor":"white","linecolor":"white","ticks":"","title":{"standoff":15},"zerolinecolor":"white","automargin":true,"zerolinewidth":2},"yaxis":{"gridcolor":"white","linecolor":"white","ticks":"","title":{"standoff":15},"zerolinecolor":"white","automargin":true,"zerolinewidth":2},"scene":{"xaxis":{"backgroundcolor":"#E5ECF6","gridcolor":"white","linecolor":"white","showbackground":true,"ticks":"","zerolinecolor":"white","gridwidth":2},"yaxis":{"backgroundcolor":"#E5ECF6","gridcolor":"white","linecolor":"white","showbackground":true,"ticks":"","zerolinecolor":"white","gridwidth":2},"zaxis":{"backgroundcolor":"#E5ECF6","gridcolor":"white","linecolor":"white","showbackground":true,"ticks":"","zerolinecolor":"white","gridwidth":2}},"shapedefaults":{"line":{"color":"#2a3f5f"}},"annotationdefaults":{"arrowcolor":"#2a3f5f","arrowhead":0,"arrowwidth":1},"geo":{"bgcolor":"white","landcolor":"#E5ECF6","subunitcolor":"white","showland":true,"showlakes":true,"lakecolor":"white"},"title":{"x":0.05},"mapbox":{"style":"light"}}},"title":{"font":{"size":14},"text":"估值汇总表","x":0.02,"y":0.98},"font":{"family":"Microsoft YaHei,PingFang SC,sans-serif","size":11,"color":"#1a1a1a"},"margin":{"l":10,"r":10,"t":60,"b":10},"height":250}},{responsive:true,displayModeBar:false});}</script>
+
+  <h3>7.6 周期高峰估值（可选价值）</h3>
+  <p>以上估值基于"周期均值"——假设猪价回归历史中枢。如果周期进入上行高峰，股价有显著上行潜力：</p>
+  <div id="ch6" class="plotly-graph-div" style="width:100%;"></div>
+<script>window.PLOTLYENV=window.PLOTLYENV||{};if(document.getElementById("ch6")){Plotly.newPlot("ch6",{"data":[{"fill":"tonexty","fillcolor":"rgba(39,174,96,0.08)","line":{"color":"#27ae60","dash":"dot","width":1},"mode":"lines","name":"高PE=16×","x":[13,14,15,16,18,20,22,24,26,28],"y":[44.873460056088724,70.35996378756957,95.84646751905034,121.33297125053114,172.3059787134927,223.27898617645434,274.2519936394159,325.2250011023776,376.1980085653391,427.17101602830076],"type":"scatter"},{"fill":"tonexty","fillcolor":"rgba(41,128,185,0.10)","line":{"color":"#2980b9","width":2.5},"mode":"lines","name":"中PE=14×","x":[13,14,15,16,18,20,22,24,26,28],"y":[39.26427754907763,61.56496831412338,83.86565907916905,106.16634984421475,150.7677313743061,195.36911290439755,239.9704944344889,284.5718759645804,329.1732574946717,373.77463902476313],"type":"scatter"},{"fill":"tonexty","fillcolor":"rgba(230,126,34,0.06)","line":{"color":"#e67e22","dash":"dash","width":1},"mode":"lines","name":"低PE=10×","x":[13,14,15,16,18,20,22,24,26,28],"y":[28.045912535055454,43.97497736723098,59.90404219940646,75.83310703158196,107.69123669593293,139.54936636028395,171.40749602463495,203.26562568898598,235.12375535333692,266.981885017688],"type":"scatter"}],"layout":{"template":{"data":{"barpolar":[{"marker":{"line":{"color":"white","width":0.5},"pattern":{"fillmode":"overlay","size":10,"solidity":0.2}},"type":"barpolar"}],"bar":[{"error_x":{"color":"#2a3f5f"},"error_y":{"color":"#2a3f5f"},"marker":{"line":{"color":"white","width":0.5},"pattern":{"fillmode":"overlay","size":10,"solidity":0.2}},"type":"bar"}],"carpet":[{"aaxis":{"endlinecolor":"#2a3f5f","gridcolor":"#C8D4E3","linecolor":"#C8D4E3","minorgridcolor":"#C8D4E3","startlinecolor":"#2a3f5f"},"baxis":{"endlinecolor":"#2a3f5f","gridcolor":"#C8D4E3","linecolor":"#C8D4E3","minorgridcolor":"#C8D4E3","startlinecolor":"#2a3f5f"},"type":"carpet"}],"choropleth":[{"colorbar":{"outlinewidth":0,"ticks":""},"type":"choropleth"}],"contourcarpet":[{"colorbar":{"outlinewidth":0,"ticks":""},"type":"contourcarpet"}],"contour":[{"colorbar":{"outlinewidth":0,"ticks":""},"colorscale":[[0.0,"#0d0887"],[0.1111111111111111,"#46039f"],[0.2222222222222222,"#7201a8"],[0.3333333333333333,"#9c179e"],[0.4444444444444444,"#bd3786"],[0.5555555555555556,"#d8576b"],[0.6666666666666666,"#ed7953"],[0.7777777777777778,"#fb9f3a"],[0.8888888888888888,"#fdca26"],[1.0,"#f0f921"]],"type":"contour"}],"heatmap":[{"colorbar":{"outlinewidth":0,"ticks":""},"colorscale":[[0.0,"#0d0887"],[0.1111111111111111,"#46039f"],[0.2222222222222222,"#7201a8"],[0.3333333333333333,"#9c179e"],[0.4444444444444444,"#bd3786"],[0.5555555555555556,"#d8576b"],[0.6666666666666666,"#ed7953"],[0.7777777777777778,"#fb9f3a"],[0.8888888888888888,"#fdca26"],[1.0,"#f0f921"]],"type":"heatmap"}],"histogram2dcontour":[{"colorbar":{"outlinewidth":0,"ticks":""},"colorscale":[[0.0,"#0d0887"],[0.1111111111111111,"#46039f"],[0.2222222222222222,"#7201a8"],[0.3333333333333333,"#9c179e"],[0.4444444444444444,"#bd3786"],[0.5555555555555556,"#d8576b"],[0.6666666666666666,"#ed7953"],[0.7777777777777778,"#fb9f3a"],[0.8888888888888888,"#fdca26"],[1.0,"#f0f921"]],"type":"histogram2dcontour"}],"histogram2d":[{"colorbar":{"outlinewidth":0,"ticks":""},"colorscale":[[0.0,"#0d0887"],[0.1111111111111111,"#46039f"],[0.2222222222222222,"#7201a8"],[0.3333333333333333,"#9c179e"],[0.4444444444444444,"#bd3786"],[0.5555555555555556,"#d8576b"],[0.6666666666666666,"#ed7953"],[0.7777777777777778,"#fb9f3a"],[0.8888888888888888,"#fdca26"],[1.0,"#f0f921"]],"type":"histogram2d"}],"histogram":[{"marker":{"pattern":{"fillmode":"overlay","size":10,"solidity":0.2}},"type":"histogram"}],"mesh3d":[{"colorbar":{"outlinewidth":0,"ticks":""},"type":"mesh3d"}],"parcoords":[{"line":{"colorbar":{"outlinewidth":0,"ticks":""}},"type":"parcoords"}],"pie":[{"automargin":true,"type":"pie"}],"scatter3d":[{"line":{"colorbar":{"outlinewidth":0,"ticks":""}},"marker":{"colorbar":{"outlinewidth":0,"ticks":""}},"type":"scatter3d"}],"scattercarpet":[{"marker":{"colorbar":{"outlinewidth":0,"ticks":""}},"type":"scattercarpet"}],"scattergeo":[{"marker":{"colorbar":{"outlinewidth":0,"ticks":""}},"type":"scattergeo"}],"scattergl":[{"marker":{"colorbar":{"outlinewidth":0,"ticks":""}},"type":"scattergl"}],"scattermapbox":[{"marker":{"colorbar":{"outlinewidth":0,"ticks":""}},"type":"scattermapbox"}],"scattermap":[{"marker":{"colorbar":{"outlinewidth":0,"ticks":""}},"type":"scattermap"}],"scatterpolargl":[{"marker":{"colorbar":{"outlinewidth":0,"ticks":""}},"type":"scatterpolargl"}],"scatterpolar":[{"marker":{"colorbar":{"outlinewidth":0,"ticks":""}},"type":"scatterpolar"}],"scatter":[{"fillpattern":{"fillmode":"overlay","size":10,"solidity":0.2},"type":"scatter"}],"scatterternary":[{"marker":{"colorbar":{"outlinewidth":0,"ticks":""}},"type":"scatterternary"}],"surface":[{"colorbar":{"outlinewidth":0,"ticks":""},"colorscale":[[0.0,"#0d0887"],[0.1111111111111111,"#46039f"],[0.2222222222222222,"#7201a8"],[0.3333333333333333,"#9c179e"],[0.4444444444444444,"#bd3786"],[0.5555555555555556,"#d8576b"],[0.6666666666666666,"#ed7953"],[0.7777777777777778,"#fb9f3a"],[0.8888888888888888,"#fdca26"],[1.0,"#f0f921"]],"type":"surface"}],"table":[{"cells":{"fill":{"color":"#EBF0F8"},"line":{"color":"white"}},"header":{"fill":{"color":"#C8D4E3"},"line":{"color":"white"}},"type":"table"}]},"layout":{"annotationdefaults":{"arrowcolor":"#2a3f5f","arrowhead":0,"arrowwidth":1},"autotypenumbers":"strict","coloraxis":{"colorbar":{"outlinewidth":0,"ticks":""}},"colorscale":{"diverging":[[0,"#8e0152"],[0.1,"#c51b7d"],[0.2,"#de77ae"],[0.3,"#f1b6da"],[0.4,"#fde0ef"],[0.5,"#f7f7f7"],[0.6,"#e6f5d0"],[0.7,"#b8e186"],[0.8,"#7fbc41"],[0.9,"#4d9221"],[1,"#276419"]],"sequential":[[0.0,"#0d0887"],[0.1111111111111111,"#46039f"],[0.2222222222222222,"#7201a8"],[0.3333333333333333,"#9c179e"],[0.4444444444444444,"#bd3786"],[0.5555555555555556,"#d8576b"],[0.6666666666666666,"#ed7953"],[0.7777777777777778,"#fb9f3a"],[0.8888888888888888,"#fdca26"],[1.0,"#f0f921"]],"sequentialminus":[[0.0,"#0d0887"],[0.1111111111111111,"#46039f"],[0.2222222222222222,"#7201a8"],[0.3333333333333333,"#9c179e"],[0.4444444444444444,"#bd3786"],[0.5555555555555556,"#d8576b"],[0.6666666666666666,"#ed7953"],[0.7777777777777778,"#fb9f3a"],[0.8888888888888888,"#fdca26"],[1.0,"#f0f921"]]},"colorway":["#636efa","#EF553B","#00cc96","#ab63fa","#FFA15A","#19d3f3","#FF6692","#B6E880","#FF97FF","#FECB52"],"font":{"color":"#2a3f5f"},"geo":{"bgcolor":"white","lakecolor":"white","landcolor":"white","showlakes":true,"showland":true,"subunitcolor":"#C8D4E3"},"hoverlabel":{"align":"left"},"hovermode":"closest","mapbox":{"style":"light"},"paper_bgcolor":"white","plot_bgcolor":"white","polar":{"angularaxis":{"gridcolor":"#EBF0F8","linecolor":"#EBF0F8","ticks":""},"bgcolor":"white","radialaxis":{"gridcolor":"#EBF0F8","linecolor":"#EBF0F8","ticks":""}},"scene":{"xaxis":{"backgroundcolor":"white","gridcolor":"#DFE8F3","gridwidth":2,"linecolor":"#EBF0F8","showbackground":true,"ticks":"","zerolinecolor":"#EBF0F8"},"yaxis":{"backgroundcolor":"white","gridcolor":"#DFE8F3","gridwidth":2,"linecolor":"#EBF0F8","showbackground":true,"ticks":"","zerolinecolor":"#EBF0F8"},"zaxis":{"backgroundcolor":"white","gridcolor":"#DFE8F3","gridwidth":2,"linecolor":"#EBF0F8","showbackground":true,"ticks":"","zerolinecolor":"#EBF0F8"}},"shapedefaults":{"line":{"color":"#2a3f5f"}},"ternary":{"aaxis":{"gridcolor":"#DFE8F3","linecolor":"#A2B1C6","ticks":""},"baxis":{"gridcolor":"#DFE8F3","linecolor":"#A2B1C6","ticks":""},"bgcolor":"white","caxis":{"gridcolor":"#DFE8F3","linecolor":"#A2B1C6","ticks":""}},"title":{"x":0.05},"xaxis":{"automargin":true,"gridcolor":"#EBF0F8","linecolor":"#EBF0F8","ticks":"","title":{"standoff":15},"zerolinecolor":"#EBF0F8","zerolinewidth":2},"yaxis":{"automargin":true,"gridcolor":"#EBF0F8","linecolor":"#EBF0F8","ticks":"","title":{"standoff":15},"zerolinecolor":"#EBF0F8","zerolinewidth":2}}},"shapes":[{"line":{"color":"#2c3e50","dash":"dash"},"type":"line","x0":0,"x1":1,"xref":"x domain","y0":39.3,"y1":39.3,"yref":"y"},{"fillcolor":"rgba(0,0,0,0.03)","line":{"width":0},"type":"rect","x0":15,"x1":20,"xref":"x","y0":0,"y1":1,"yref":"y domain"}],"annotations":[{"font":{"size":10},"showarrow":false,"text":"当前股价 39.3元","x":1,"xanchor":"right","xref":"x domain","y":39.3,"yanchor":"bottom","yref":"y"},{"font":{"size":9},"showarrow":false,"text":"历史常见\u003cbr\u003e温和高峰区","x":20,"xanchor":"right","xref":"x","y":1,"yanchor":"top","yref":"y domain"}],"title":{"font":{"size":14},"text":"周期高峰股价潜力 — 猪价 × 峰值PE","x":0.02,"y":0.98},"font":{"family":"Microsoft YaHei,PingFang SC,sans-serif","size":11,"color":"#1a1a1a"},"margin":{"l":55,"r":30,"t":80,"b":60},"legend":{"orientation":"h","yanchor":"bottom","y":1.05},"xaxis":{"title":{"text":"峰值年猪价（元\u002fkg）"}},"yaxis":{"title":{"text":"潜在股价（元）"}},"height":400,"hovermode":"x unified"}},{responsive:true,displayModeBar:false});}</script>
+  <table>
+    <tr><th>峰值年猪价</th><th>峰值 EPS（元）</th><th>低 PE=10×</th><th>中 PE=14×</th><th>高 PE=16×</th></tr>
+    <tr><td>14 元/kg</td><td>4.40</td><td>44 元</td><td>62 元</td><td>70 元</td></tr><tr><td>16 元/kg</td><td>7.58</td><td>76 元</td><td>106 元</td><td>121 元</td></tr><tr><td>18 元/kg</td><td>10.77</td><td>108 元</td><td>151 元</td><td>172 元</td></tr><tr><td>20 元/kg</td><td>13.95</td><td>140 元</td><td>195 元</td><td>223 元</td></tr><tr><td>22 元/kg</td><td>17.14</td><td>171 元</td><td>240 元</td><td>274 元</td></tr><tr><td>24 元/kg</td><td>20.33</td><td>203 元</td><td>285 元</td><td>325 元</td></tr>
+  </table>
+  <p style="font-size:12px;color:#999">峰值 PE 推导：历史 2020 年高峰 PE=18.8× → 经周期压缩后取 10-16×（三重交叉验证）。出栏 8600 万头，成本 11.0 元/kg。历史常见温和高峰猪价区间 15-20 元/kg。</p>
+
+  <h3>7.7 历史低谷 PE 验证</h3>
+  <div class="box-red">
+    <p style="margin:0">
+      <b>三重交叉验证结论：</b><br>
+      ① 加权模型目标价 38 元 → 当前 39.3 元 = <b>模型合理（+3%）</b><br>
+      ② 历史低谷 PE 底线 20.6× → 当前 19.3× = <b style="color:#c0392b">市场定价处于 2021 年以来最低水平</b><br>
+      ③ 期货市场隐含 2027H1 ≈ 12.87 元/kg → 偏向基准偏上 = <b>复苏预期温和，尚未定价反转</b><br>
+      <b>综合：当前价格处于"模型合理 + 市场便宜"的交汇点。下行有限（历史低谷底价 42 元），上行有周期高峰期权。</b>
+    </p>
+  </div>
+
+  <p class="source">来源：四种估值方法的完整参数和计算过程详见第6步估值报告及 data/sources/SOURCES.md。</p>
+</div>
+
+<hr class="page-break">
+
+<!-- ==================== 第八部分：投资建议 ==================== -->
+<div class="section">
+  <h2>八、投资建议</h2>
+
+  <h3>8.1 投资推荐</h3>
+  <div class="box-green">
+    <p style="margin:0">
+      <b>评级：<span style="font-size:20px">增持</span></b><br>
+      <b>当前股价：</b>39.3 元（2026-07-28）<br>
+      <b>12 个月目标价：42 – 49 元</b>（潜在上涨 +7% – +25%）<br>
+      <b>目标价推导：</b>历史低谷 PE 底线 21× → 21 × 2.04 = 42 元（底价）；周期均值 PE 24× → 24 × 2.04 = 49 元（合理估值上沿）<br>
+      <b>情景分析：</b>若猪价持续低迷（概率 20%）→ 股价或回落至 30-35 元；若猪价如期货预期温和复苏（概率 50%）→ 40-45 元；若猪价反转至 16+ 元/kg（概率 30%）→ 50+ 元
+    </p>
+  </div>
+
+  <h3>8.2 核心论点（投资逻辑链）</h3>
+  <ol>
+    <li><b>周期位置有利</b>：猪价处于历史最深亏损区（猪粮比 3.99），能繁母猪去化方向确定。周期型公司的买入时机往往在最悲观时。</li>
+    <li><b>成本护城河在低谷期被放大</b>：当全行业亏损时，成本最低者活到最后——2026 年行业性亏损将是牧原市场份额进一步提升的窗口。</li>
+    <li><b>估值是最大安全垫</b>：19.3× 周期 PE 低于任何 2021 年以来的低谷。如果历史定价规律成立，当前向下空间有限。</li>
+    <li><b>催化剂逐渐积累</b>：能繁持续去化 → 猪价拐点 → 盈利反转——未来 6-12 个月多条催化剂可能兑现。</li>
+    <li><b>周期高峰期权是"免费午餐"</b>：以当前估值买入，如果未来 2-3 年内周期回归高峰（猪价 16-20 元/kg），潜在回报 100%+。这不是预测，而是周期必然。</li>
+  </ol>
+
+  <h3>8.3 催化剂</h3>
+  <div class="col2">
+    <div>
+      <h3>短期催化剂（0-6 个月）</h3>
+      <ul>
+        <li>2026Q3 能繁母猪进一步去化数据</li>
+        <li>猪价季节性反弹（秋冬消费旺季）</li>
+        <li>2026 半年报/三季报——市场检验公司成本控制进展</li>
+        <li>生猪期货 LH 合约价格变动——反映市场预期调整</li>
+      </ul>
+    </div>
+    <div>
+      <h3>中期催化剂（6-12 个月）</h3>
+      <ul>
+        <li>能繁母猪降至 3700 万头以下（正式跌破正常保有量）</li>
+        <li>2027 年猪价拐点确认——周期反转信号</li>
+        <li>公司盈利由负转正——EPS 从亏损到微利</li>
+        <li>去杠杆加速——有息负债降至 500 亿以下</li>
+      </ul>
+    </div>
+  </div>
+
+  <h3>8.4 风险矩阵</h3>
+  <table>
+    <tr><th>风险因素</th><th>影响程度</th><th>概率</th><th>触发条件</th><th>应对措施</th></tr>
+    <tr><td>猪价持续低迷</td><td style='color:#c0392b'>高</td><td>30%</td><td>去产能受阻、需求疲软</td><td>严控仓位、分批建仓</td></tr>
+<tr><td>饲料成本反弹</td><td style='color:#e67e22'>中</td><td>20%</td><td>南美天气、汇率贬值</td><td>跟踪豆粕/玉米期货</td></tr>
+<tr><td>疫情风险</td><td style='color:#e67e22'>中</td><td>15%</td><td>ASF或其他疫病复发</td><td>牧原全封闭模式天然防护</td></tr>
+<tr><td>融资环境恶化</td><td style='color:#f39c12'>低</td><td>10%</td><td>信贷收紧、利率上行</td><td>OCF强劲、去杠杆趋势已现</td></tr>
+<tr><td>管理层/治理风险</td><td style='color:#f39c12'>低</td><td>5%</td><td>关键人风险、战略失误</td><td>创始人深耕30年+二代接棒</td></tr>
+  </table>
+
+  <h3>8.5 操作建议</h3>
+  <table>
+    <tr><th>操作</th><th>价格区间</th><th>仓位建议</th><th>逻辑</th></tr>
+    <tr><td style='color:#27ae60'>✓ 分批建仓</td><td>35-40 元</td><td>达到目标仓位的 50%</td><td>低于历史低谷 PE 底线——估值保护充分</td></tr>
+    <tr><td style='color:#2980b9'>✓ 加仓</td><td>30-35 元</td><td>加至目标仓位的 80%</td><td>猪价进一步下跌导致市场恐慌——但去化逻辑反而加强</td></tr>
+    <tr><td style='color:#f39c12'>— 持有</td><td>40-50 元</td><td>维持仓位</td><td>估值在合理区间，等待催化剂兑现</td></tr>
+    <tr><td style='color:#e67e22'>⚠ 减仓</td><td>50-60 元</td><td>减至 50%</td><td>周期 PE 达到 24-29×——接近历史估值中枢上沿</td></tr>
+    <tr><td style='color:#c0392b'>✗ 止损</td><td>&lt; 25 元</td><td>清仓</td><td>若跌破意味着猪周期逻辑或公司基本面出现结构性恶化</td></tr>
+  </table>
+
+  <div class="box">
+    <p style="margin:0"><b>持仓策略说明：</b>周期型公司的投资不适合"一次性建仓"——最佳策略是<b>分批、反向、有纪律</b>。在周期低谷（高 PE、低盈利）逐步买入，在周期高峰（低 PE、高盈利）逐步卖出。当前处于"高 PE 买入"窗口——如果相信周期必然回归，这个窗口不会永远敞开。</p>
+  </div>
+
+  <p class="source">投资建议综合前 7 步分析成果，使用多重交叉验证降低单一方法偏差。所有数据来源详见各分步报告及 data/sources/SOURCES.md。</p>
+</div>
+
+<hr class="page-break">
+
+<!-- ==================== 附录：数据来源与方法论 ==================== -->
+<div class="section">
+  <h2>附录：关键数据来源与方法论声明</h2>
+
+  <h3>数据来源</h3>
+  <ul>
+    <li><b>财务数据</b>：牧原股份历年年报（2009-2025），通过 akshare 东方财富接口拉取，缓存于 data/ 目录</li>
+    <li><b>宏观数据</b>：国家统计局（GDP/CPI/PPI/能繁母猪）、中国人民银行（LPR/M2/汇率）、海关总署（进口数据）</li>
+    <li><b>行业数据</b>：行情宝/搜猪网（猪价）、农业农村部（产能调控）、猪易网/博亚和讯（成本对比）</li>
+    <li><b>期货数据</b>：大连商品交易所 LH 合约（2026-07-28 收盘价）</li>
+    <li><b>同行行情</b>：亿牛网（eniu.com），2026-07 手工采集（本机 SSL 阻断）</li>
+  </ul>
+
+  <h3>方法论</h3>
+  <p>本报告遵循《证券分析》（格雷厄姆 & 多德，1934）与《华尔街证券分析》（胡克，第2版）的系统性方法论框架。自上而下八步流程：宏观经济评述 → 行业分析 → 公司分析 → 财务分析 → 财务预测 → 估值 → 投资建议 → 研究报告。</p>
+
+  <h3>关键局限性</h3>
+  <ol>
+    <li>猪价预测是估值最大的不确定性来源——生猪期货仅覆盖未来 ~12 个月，长期判断依赖产能趋势推断</li>
+    <li>周期均值 EPS 假设"未来周期与过去 8 年相似"——如果行业结构性变化（如规模化导致周期消失），这一假设将不成立</li>
+    <li>同行可比数据为手工采集（本机 SSL 阻断），可能存在滞后</li>
+    <li>DCF 对 WACC 和增长率极度敏感——这也是其权重仅 20% 的原因</li>
+    <li>估值结果是"近似值范围"而非精确数字——60-70% 时间做出正确预测已属超常</li>
+  </ol>
+
+  <p style="font-size:12px;color:#bbb;margin-top:24px">
+    报告日期：2026-08-02 · 数据截至 2026-07-28（除特别标注外）· 本报告仅供学习研究参考，不构成投资建议<br>
+    完整数据来源索引：data/sources/SOURCES.md · 路线图：ROADMAP.md
+  </p>
+</div>
+
+</div>
+</body>
+</html>

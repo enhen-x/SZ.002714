@@ -1,0 +1,25 @@
+{
+  "step": 3,
+  "step_name": "公司分析",
+  "company": "牧原股份",
+  "code": "002714.SZ",
+  "report_date": "2026-08-01",
+  "data_sources": [
+    "牧原股份历年年报（2017-2025）",
+    "公司投资者交流纪要（2025-2026）",
+    "猪业高层论坛 TOP20 排名",
+    "猪易网上市猪企成本对比",
+    "券商研报（中航/方正/华泰，2026年3-7月）",
+    "管理层换届公告（2026.06.01）",
+    "akshare 东方财富财务数据接口"
+  ],
+  "charts": [
+    "chart_rev_profit — 营收与净利润趋势",
+    "chart_hog_sales — 出栏量与市占率",
+    "chart_cost_trend — 成本vs猪价",
+    "chart_peer — 可比公司规模与成本",
+    "chart_capacity — 产能与PSY",
+    "chart_rd — 研发投入",
+    "chart_radar — 竞争优势雷达图"
+  ]
+}

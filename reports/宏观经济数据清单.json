@@ -1,0 +1,66 @@
+{
+  "company": "牧原股份",
+  "code": "002714.SZ",
+  "report_date": "2026-08-01",
+  "version": "v2",
+  "sections": {
+    "GDP": true,
+    "PMI": true,
+    "CPI": true,
+    "PPI": true,
+    "LPR": true,
+    "M2": true,
+    "SHIBOR": true,
+    "社零": true,
+    "生猪价格(缓存)": true,
+    "猪周期驱动因子(缓存)": true,
+    "全国产能(缓存)": true,
+    "能繁母猪(手工补充2026Q2)": true,
+    "汇率(手工补充关键点)": true,
+    "猪肉进口(手工补充)": true
+  },
+  "restored_from_git": [],
+  "hog_price_meta": {
+    "price_measure": "行情宝全国生猪成交均价",
+    "unit": "元/公斤",
+    "source": "行情宝全国生猪成交均价（curl TLS 后备）",
+    "akshare_version": "1.17.90",
+    "observation_start": "2015-01-05",
+    "observation_end": "2026-07-27",
+    "observation_frequency": "周度为主",
+    "observation_rows": 576,
+    "matched_quarters": 45,
+    "updated_at": "2026-07-29T01:58:06+08:00",
+    "fetch_warning": "AkShare: SSLError: HTTPSConnectionPool(host='hqb.nxin.com', port=443): Max retries exceeded with url: /pigindex/getPigIndexChart.shtml?regionId=0 (Caused by SSLError(SSLEOFError(8, '[SSL: UNEXPECTED_EOF_WHILE_READING] EOF occurred in violation of protocol (_ssl.c:1028)'))); AkShare: SSLError: HTTPSConnectionPool(host='hqb.nxin.com', port=443): Max retries exceeded with url: /pigindex/getPigIndexChart.shtml?regionId=0 (Caused by SSLError(SSLEOFError(8, '[SSL: UNEXPECTED_EOF_WHILE_READING] EOF occurred in violation of protocol (_ssl.c:1028)')))",
+    "stock_source": "腾讯证券后复权行情（AkShare TLS 后备）",
+    "stock_observation_start": "2014-01-28",
+    "stock_observation_end": "2026-07-28",
+    "current_stock_price": 39.3,
+    "stock_fetch_warning": "AkShare: SSLError: HTTPSConnectionPool(host='push2his.eastmoney.com', port=443): Max retries exceeded with url: /api/qt/stock/kline/get?fields1=f1%2Cf2%2Cf3%2Cf4%2Cf5%2Cf6&fields2=f51%2Cf52%2Cf53%2Cf54%2Cf55%2Cf56%2Cf57%2Cf58%2Cf59%2Cf60%2Cf61%2Cf116&ut=7eea3edcaed734bea9cbfc24409ed989&klt=101&fqt=2&secid=0.002714&beg=20140101&end=20260729 (Caused by SSLError(SSLEOFError(8, '[SSL: UNEXPECTED_EOF_WHILE_READING] EOF occurred in violation of protocol (_ssl.c:1028)'))); AkShare: SSLError: HTTPSConnectionPool(host='push2his.eastmoney.com', port=443): Max retries exceeded with url: /api/qt/stock/kline/get?fields1=f1%2Cf2%2Cf3%2Cf4%2Cf5%2Cf6&fields2=f51%2Cf52%2Cf53%2Cf54%2Cf55%2Cf56%2Cf57%2Cf58%2Cf59%2Cf60%2Cf61%2Cf116&ut=7eea3edcaed734bea9cbfc24409ed989&klt=101&fqt=2&secid=0.002714&beg=20140101&end=20260729 (Caused by SSLError(SSLEOFError(8, '[SSL: UNEXPECTED_EOF_WHILE_READING] EOF occurred in violation of protocol (_ssl.c:1028)')))",
+    "target_price_model": {
+      "method": "目标价不再使用相关性回归",
+      "fundamental_report": "reports/基本面估值分析.html"
+    },
+    "limitations": [
+      "行情宝序列始于 2015 年，缺少牧原上市首年 2014 年数据",
+      "全国成交均价不等同于牧原自身商品猪结算价或终端猪肉零售价",
+      "样本相关性不代表因果关系，滞后期择优存在多重比较偏差"
+    ]
+  },
+  "supplements": {
+    "sow_2026q1": 3904,
+    "sow_2026q2": 3780,
+    "sow_normal_current": 3750,
+    "sow_normal_history": [
+      "2021~2024-01: 4100万头",
+      "2024-02~2026-04: 3900万头",
+      "2026-05 起: 3750万头"
+    ],
+    "fx_points": [
+      "2025-12-31: 7.0288",
+      "2026-06-30: 6.8109",
+      "2026-07-31: 6.7894"
+    ],
+    "import_pork_2026h1": "38.0万吨 (-28.8%)"
+  }
+}

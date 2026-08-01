@@ -1,0 +1,35 @@
+{
+  "step": 4,
+  "step_name": "财务分析",
+  "company": "牧原股份",
+  "code": "002714.SZ",
+  "report_date": "2026-08-01",
+  "data_sources": [
+    "公司年报（2009-2025）— 利润表/资产负债表/现金流量表（akshare 东方财富）",
+    "东方财富主要财务指标接口（预计算 ROE/ROIC/资产负债率等）",
+    "同行业可比公司 2025 年报（温氏/新希望/正邦/神农）"
+  ],
+  "charts": [
+    "ch1",
+    "ch2",
+    "ch3",
+    "ch4",
+    "ch5",
+    "ch6",
+    "ch7",
+    "ch8",
+    "ch9",
+    "ch10"
+  ],
+  "key_metrics": {
+    "latest_year": 2025,
+    "latest_revenue_bn": "1441.4",
+    "latest_parent_profit_bn": "154.9",
+    "avg8_parent_profit_bn": "104",
+    "avg5_parent_profit_bn": "99",
+    "avg5_eps": "1.83",
+    "avg8_roe": "23.2%",
+    "latest_debt_ratio": "54.2%"
+  },
+  "company_classification": "周期型公司"
+}
