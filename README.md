@@ -6,6 +6,14 @@
 
 ---
 
+## 🌐 在线报告速览
+
+| Step 1 | Step 2 | Step 3 | Step 4 | Step 5 | Step 6 | Step 8 |
+|--------|--------|--------|--------|--------|--------|--------|
+| [宏观](https://enhen-x.github.io/SZ.002714/reports/%E5%AE%8F%E8%A7%82%E7%BB%8F%E6%B5%8E%E5%88%86%E6%9E%90%E6%8A%A5%E5%91%8A.html) | [行业](https://enhen-x.github.io/SZ.002714/reports/%E8%A1%8C%E4%B8%9A%E5%88%86%E6%9E%90%E6%8A%A5%E5%91%8A.html) | [公司](https://enhen-x.github.io/SZ.002714/reports/%E5%85%AC%E5%8F%B8%E5%88%86%E6%9E%90%E6%8A%A5%E5%91%8A.html) | [财务](https://enhen-x.github.io/SZ.002714/reports/%E8%B4%A2%E5%8A%A1%E5%88%86%E6%9E%90%E6%8A%A5%E5%91%8A.html) | [预测](https://enhen-x.github.io/SZ.002714/reports/%E8%B4%A2%E5%8A%A1%E9%A2%84%E6%B5%8B%E6%8A%A5%E5%91%8A.html) | [估值](https://enhen-x.github.io/SZ.002714/reports/%E4%BC%B0%E5%80%BC%E6%8A%A5%E5%91%8A.html) | [📋 综合](https://enhen-x.github.io/SZ.002714/reports/%E8%AF%81%E5%88%B8%E5%88%86%E6%9E%90%E7%A0%94%E7%A9%B6%E6%8A%A5%E5%91%8A.html) |
+
+---
+
 ## 📊 投资结论
 
 | 维度 | 结论 |
@@ -19,16 +27,18 @@
 
 ## 🗺️ 八步分析流程
 
-| 步骤 | 内容 | 报告 | 脚本 |
-|------|------|------|------|
-| **1** | 宏观经济评述 | [宏观经济分析报告](reports/宏观经济分析报告.html) | [analyze_macro.py](scripts/analyze_macro.py) |
-| **2** | 行业分析 | [行业分析报告](reports/行业分析报告.html) | [analyze_industry.py](scripts/analyze_industry.py) |
-| **3** | 公司分析 | [公司分析报告](reports/公司分析报告.html) | [analyze_company.py](scripts/analyze_company.py) |
-| **4** | 财务分析 | [财务分析报告](reports/财务分析报告.html) | [analyze_finance.py](scripts/analyze_finance.py) |
-| **5** | 财务预测 | [财务预测报告](reports/财务预测报告.html) | [analyze_forecast.py](scripts/analyze_forecast.py) |
-| **6** | 估值 | [估值报告](reports/估值报告.html) | [analyze_valuation.py](scripts/analyze_valuation.py) |
-| **7** | 投资建议 | 已整合至估值报告 §9 | — |
-| **8** | 综合研究报告 | [证券分析研究报告](reports/证券分析研究报告.html) | [analyze_report.py](scripts/analyze_report.py) |
+> 🔗 **GitHub Pages 在线查看**：[enhen-x.github.io/SZ.002714](https://enhen-x.github.io/SZ.002714/)
+
+| 步骤 | 内容 | 本地报告 | 🌐 在线报告 | 脚本 |
+|------|------|------|------|------|
+| **1** | 宏观经济评述 | [.html](reports/%E5%AE%8F%E8%A7%82%E7%BB%8F%E6%B5%8E%E5%88%86%E6%9E%90%E6%8A%A5%E5%91%8A.html) | [🔗 Pages](https://enhen-x.github.io/SZ.002714/reports/%E5%AE%8F%E8%A7%82%E7%BB%8F%E6%B5%8E%E5%88%86%E6%9E%90%E6%8A%A5%E5%91%8A.html) | [analyze_macro.py](scripts/analyze_macro.py) |
+| **2** | 行业分析 | [.html](reports/%E8%A1%8C%E4%B8%9A%E5%88%86%E6%9E%90%E6%8A%A5%E5%91%8A.html) | [🔗 Pages](https://enhen-x.github.io/SZ.002714/reports/%E8%A1%8C%E4%B8%9A%E5%88%86%E6%9E%90%E6%8A%A5%E5%91%8A.html) | [analyze_industry.py](scripts/analyze_industry.py) |
+| **3** | 公司分析 | [.html](reports/%E5%85%AC%E5%8F%B8%E5%88%86%E6%9E%90%E6%8A%A5%E5%91%8A.html) | [🔗 Pages](https://enhen-x.github.io/SZ.002714/reports/%E5%85%AC%E5%8F%B8%E5%88%86%E6%9E%90%E6%8A%A5%E5%91%8A.html) | [analyze_company.py](scripts/analyze_company.py) |
+| **4** | 财务分析 | [.html](reports/%E8%B4%A2%E5%8A%A1%E5%88%86%E6%9E%90%E6%8A%A5%E5%91%8A.html) | [🔗 Pages](https://enhen-x.github.io/SZ.002714/reports/%E8%B4%A2%E5%8A%A1%E5%88%86%E6%9E%90%E6%8A%A5%E5%91%8A.html) | [analyze_finance.py](scripts/analyze_finance.py) |
+| **5** | 财务预测 | [.html](reports/%E8%B4%A2%E5%8A%A1%E9%A2%84%E6%B5%8B%E6%8A%A5%E5%91%8A.html) | [🔗 Pages](https://enhen-x.github.io/SZ.002714/reports/%E8%B4%A2%E5%8A%A1%E9%A2%84%E6%B5%8B%E6%8A%A5%E5%91%8A.html) | [analyze_forecast.py](scripts/analyze_forecast.py) |
+| **6** | 估值 | [.html](reports/%E4%BC%B0%E5%80%BC%E6%8A%A5%E5%91%8A.html) | [🔗 Pages](https://enhen-x.github.io/SZ.002714/reports/%E4%BC%B0%E5%80%BC%E6%8A%A5%E5%91%8A.html) | [analyze_valuation.py](scripts/analyze_valuation.py) |
+| **7** | 投资建议 | 已整合至估值报告 §9 | — | — |
+| **8** | 综合研究报告 | [.html](reports/%E8%AF%81%E5%88%B8%E5%88%86%E6%9E%90%E7%A0%94%E7%A9%B6%E6%8A%A5%E5%91%8A.html) | [🔗 Pages](https://enhen-x.github.io/SZ.002714/reports/%E8%AF%81%E5%88%B8%E5%88%86%E6%9E%90%E7%A0%94%E7%A9%B6%E6%8A%A5%E5%91%8A.html) | [analyze_report.py](scripts/analyze_report.py) |
 
 ### 各步骤要点
 
