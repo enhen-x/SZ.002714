@@ -281,24 +281,47 @@ def ch2_peer_compare():
     return fig
 
 def ch3_scenario_eps():
-    """图表3: 三情景EPS预测"""
-    yrs=[2025,2026,2027,2028]
-    yr_labels=["2025\n(实际)","2026E","2027E","2028E"]
-    fig=go.Figure()
-    colors_sc={"上行":C["green"],"基准":C["midblue"],"下行":C["red"]}
-    dashes={"上行":"dot","基准":"solid","下行":"dash"}
-    for sc in ["上行","基准","下行"]:
-        eps_vals=[FORECAST[sc][yr]["eps"] for yr in yrs]
-        fig.add_trace(go.Scatter(x=yr_labels,y=eps_vals,mode="lines+markers",name=sc,
-            line=dict(color=colors_sc[sc],width=2.5,dash=dashes[sc]),marker_size=10,
-            text=[f"{v:.2f}" for v in eps_vals],textfont_size=11,textposition="top center"))
-    fig.add_hline(y=0,line_dash="solid",line_color="#ccc",line_width=1)
-    fig.add_hline(y=AVG8_EPS,line_dash="dash",line_color=C["dark"],
-        annotation=dict(text=f"8Y均值 EPS={AVG8_EPS:.2f}",font_size=10))
-    fig.update_layout(template=PLOTLY_TEMPLATE,title=dict(text="三种情景 EPS 预测",x=0.02,y=0.98,font_size=14),
-        font=dict(family="Microsoft YaHei,PingFang SC,sans-serif",size=11,color="#1a1a1a"),
-        height=380,margin=dict(l=55,r=30,t=80,b=50),hovermode="x unified",
-        yaxis_title="EPS（元/股）",legend=dict(orientation="h",yanchor="bottom",y=1.05))
+    """图表3: 三情景EPS预测 — 分组柱状图（视频研究建议：峰值PE取10-14x，预期管理）"""
+    # 2025 实际 EPS（从财务数据直接取，不用模型算的 2.98）
+    ACTUAL_2025_EPS = 2.88  # 155亿 / 54.7亿股
+
+    yrs = [2026, 2027, 2028]
+    yr_labels = ["2026E", "2027E", "2028E"]
+    fig = go.Figure()
+
+    colors_sc = {"上行": C["green"], "基准": C["midblue"], "下行": C["red"]}
+    width = 0.25
+    offsets = {"上行": -0.28, "基准": 0, "下行": 0.28}
+
+    for sc in ["上行", "基准", "下行"]:
+        eps_vals = [FORECAST[sc][yr]["eps"] for yr in yrs]
+        fig.add_trace(go.Bar(
+            x=yr_labels, y=eps_vals, name=sc,
+            marker_color=colors_sc[sc], marker_line_color="white", marker_line_width=1,
+            text=[f"{v:.2f}" for v in eps_vals], textfont_size=10, textposition="outside",
+            width=width, offset=offsets[sc],
+            hovertemplate=f"{sc}: %{{y:.2f}}元/股<extra></extra>"
+        ))
+
+    # 2025 实际 EPS 参考线（独立数据点，不属于预测）
+    fig.add_hline(y=ACTUAL_2025_EPS, line_dash="dot", line_color="#7f8c8d", line_width=1.5,
+        annotation=dict(text=f"2025实际 EPS={ACTUAL_2025_EPS}", font_size=10, font_color="#7f8c8d"))
+
+    # 零线 + 8年均值线
+    fig.add_hline(y=0, line_dash="solid", line_color="#ccc", line_width=1)
+    fig.add_hline(y=AVG8_EPS, line_dash="dash", line_color=C["dark"],
+        annotation=dict(text=f"8Y均值 EPS={AVG8_EPS:.2f}", font_size=10, font_color=C["dark"]))
+
+    fig.update_layout(
+        template=PLOTLY_TEMPLATE,
+        title=dict(text="三种情景 EPS 预测（2026E-2028E）", x=0.02, y=0.98, font_size=14),
+        font=dict(family="Microsoft YaHei,PingFang SC,sans-serif", size=11, color="#1a1a1a"),
+        height=400, margin=dict(l=55, r=30, t=80, b=50), hovermode="x unified",
+        yaxis_title="EPS（元/股）",
+        legend=dict(orientation="h", yanchor="bottom", y=1.05),
+        bargap=0.15, bargroupgap=0.1,
+        plot_bgcolor="white",
+    )
     return fig
 
 def ch4_valuation_summary():
