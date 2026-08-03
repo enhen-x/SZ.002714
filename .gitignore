@@ -20,3 +20,7 @@ data/.stock-*.json.tmp
 
 # Regenerable raw API responses
 data/*原始.json
+
+# Bilibili audio files (large, regenerable)
+data/bilibili_videos/*.m4a
+data/bilibili_videos/*.mp3
