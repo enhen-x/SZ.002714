@@ -563,41 +563,58 @@ def chart_futures_curve():
 
 
 def chart_pig_grain():
-    """猪粮比仪表盘风格展示。"""
+    """猪粮比指标 — 色带区间 + 当前值标记。"""
     fig = go.Figure()
 
-    zones = PIG_GRAIN_RATIO["zones"]
-    colors = ["#e74c3c", "#e67e22", "#f1c40f", "#2ecc71", "#27ae60", "#1a6e35"]
     current = PIG_GRAIN_RATIO["current"]
+    zones_data = PIG_GRAIN_RATIO["zones"]
 
-    # 水平色带
-    for i, (label, name, desc) in enumerate(zones):
-        fig.add_trace(go.Bar(
-            x=[10], y=[f"{label}  {name}"],
-            orientation="h",
-            marker=dict(color=colors[i], opacity=0.3),
-            showlegend=False,
-            hovertext=desc,
-            width=0.6,
-        ))
-        if label.startswith("< 5"):
-            fig.add_annotation(x=1, y=f"{label}  {name}", text=f"← 当前 {current}:1",
-                             showarrow=True, arrowhead=2, ax=-30, ay=0,
-                             font=dict(size=13, color="#c0392b", family="Microsoft YaHei"),
-                             bordercolor="#c0392b", borderwidth=1, borderpad=4)
+    # 用 add_vrect 在真实比例坐标上画色带
+    zone_bounds = [
+        (3.5, 5.0, "#e74c3c"),   # 重度亏损
+        (5.0, 5.5, "#e67e22"),   # 中度亏损
+        (5.5, 6.0, "#f1c40f"),   # 轻度亏损
+        (6.0, 7.0, "#2ecc71"),   # 盈亏平衡
+        (7.0, 8.0, "#27ae60"),   # 盈利
+        (8.0, 10.0,"#1a6e35"),   # 高盈利
+    ]
+    zone_labels = ["重度亏损\n&lt;5:1", "中度\n5~5.5", "轻度\n5.5~6",
+                   "盈亏平衡\n6~7", "盈利\n7~8", "高盈利\n&gt;8"]
 
-    fig.add_trace(go.Scatter(
-        x=[current], y=["< 5:1  重度亏损"], mode="markers",
-        marker=dict(color="#c0392b", size=18, symbol="triangle-down"),
-        name=f"当前猪粮比 {current}:1",
-        showlegend=False,
-    ))
+    for (x0, x1, c), label in zip(zone_bounds, zone_labels):
+        fig.add_vrect(
+            x0=x0, x1=x1, fillcolor=c, opacity=0.35,
+            line_width=0, layer="below",
+        )
+        # 区间标签放在色带中间
+        fig.add_annotation(
+            x=(x0 + x1) / 2, y=0.5, text=label,
+            showarrow=False, font=dict(size=9, color="#333"),
+            yref="paper",
+        )
+
+    # 当前值竖线
+    fig.add_vline(
+        x=current, line_width=3, line_color="#1a1a1a",
+    )
+    fig.add_annotation(
+        x=current, y=0.92, text=f"▼ 当前 {current}:1",
+        showarrow=False,
+        font=dict(size=13, color="#c0392b", family="Microsoft YaHei"),
+        bgcolor="white", borderpad=4, yref="paper",
+    )
 
     fig.update_layout(
-        title=f"猪粮比 — 当前 {current}:1（重度亏损区间）",
-        height=260, margin=dict(l=150, r=40, t=50, b=40),
-        xaxis=dict(title="", range=[0, 11], showticklabels=False, showgrid=False, zeroline=False),
-        yaxis=dict(title="", autorange="reversed"),
+        title=f"猪粮比 — 当前 <b>{current}:1</b>（重度亏损区间，全行业深度亏损）",
+        height=180,
+        margin=dict(l=40, r=40, t=50, b=35),
+        xaxis=dict(
+            title="猪粮比",
+            tickvals=[3.5, 4.0, 4.5, 5.0, 5.5, 6.0, 7.0, 8.0, 9.0, 10.0],
+            range=[3.3, 10.3],
+            showgrid=True, gridcolor="#eee",
+        ),
+        yaxis=dict(showticklabels=False, showgrid=False, range=[0, 1]),
         plot_bgcolor="white",
     )
     return fig.to_html(full_html=False, include_plotlyjs=False, div_id="chart_pig_grain")
