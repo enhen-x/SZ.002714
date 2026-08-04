@@ -163,7 +163,7 @@ print(f"8Y 归母={AVG8_PARENT:.0f}亿, 8Y EBITDA={AVG8_EBITDA:.0f}亿, 8Y FCF={
 HIST_PE = {}
 for _, row in annual_indicator.iterrows():
     yr = int(row["_year"])
-    if 2018 <= yr <= 2025:
+    if 2014 <= yr <= 2025:
         per_toi = safe_float(row.get("PER_TOI"), None)  # 年末滚动PE(TTM)
         per_oi = safe_float(row.get("PER_OI"), None)    # 年末静态PE
         eps = safe_float(row.get("EPSJB"), 0)
@@ -345,29 +345,44 @@ else:
 
 # 历史股价高低点（前复权，来源：同花顺/东方财富历史行情）
 STOCK_ANNUAL_RANGE = {
+    2014: (58, 22), 2015: (78, 28), 2016: (34, 22),  # 估计值（不复权），待日线数据拉取后校准
     2017: (15, 9), 2018: (15, 5), 2019: (35, 14), 2020: (100, 35),
     2021: (92, 40), 2022: (63, 45), 2023: (55, 35), 2024: (88, 48), 2025: (79, 50),
     2026: (50, 35),  # 截至2026-08-04：年初~50 → 年中低点~35，当前39.3
 }
 
+# 从季度财报中加载各年度末的BPS（避免用当前总股本反算历史BPS导致的偏差）
+_qf_bps = pd.read_csv(DATA_DIR / "主要财务指标_按单季度.csv", dtype=str)
+_qf_bps["REPORT_DATE"] = pd.to_datetime(_qf_bps["REPORT_DATE"])
+_qf_bps["_year"] = _qf_bps["REPORT_DATE"].dt.year
+_qf_q4 = _qf_bps[_qf_bps["REPORT_DATE"].dt.month == 12].copy()
+ANNUAL_BPS = {}
+for _, row in _qf_q4.iterrows():
+    yr = int(row["_year"])
+    bps = safe_float(row.get("BPS"), None)
+    if bps and bps > 0:
+        ANNUAL_BPS[yr] = bps
+
 # 计算每年滚动8年周期均值EPS
 TROUGH_DATA = {}
-for yr in range(2017, 2027):
+for yr in range(2014, 2027):
     if yr not in FIN: continue
     cycle_years = [y for y in range(yr-7, yr+1) if y in FIN]
     if len(cycle_years) < 5: continue
     cycle_eps = sum(FIN[y]["eps"] for y in cycle_years) / len(cycle_years)
     sh, sl = STOCK_ANNUAL_RANGE.get(yr, (0, 0))
     pe_cycle_low = sl / cycle_eps if cycle_eps > 0.1 else 99
-    pb_low = sl / FIN[yr].get("bvps", FIN[yr]["total_equity"] / TOTAL_SHARES) if FIN[yr].get("total_equity", 0) > 0 else 99
+    # 使用实际年度末BPS（来自季度财报），不再用当前总股本反算
+    bps_actual = ANNUAL_BPS.get(yr, FIN[yr]["total_equity"] / TOTAL_SHARES)
+    pb_low = sl / bps_actual if bps_actual > 0 else 99
     TROUGH_DATA[yr] = {
-        "eps": FIN[yr]["eps"], "cycle_eps": cycle_eps, "bps": FIN[yr]["total_equity"] / TOTAL_SHARES,
+        "eps": FIN[yr]["eps"], "cycle_eps": cycle_eps, "bps": bps_actual,
         "stock_high": sh, "stock_low": sl, "pe_cycle_low": pe_cycle_low,
         "pb_low": pb_low, "roe": FIN[yr].get("roe", 0),
     }
 
 # 关键低谷年份
-TROUGH_KEY_YEARS = [2018, 2021, 2023, 2025]
+TROUGH_KEY_YEARS = [2014, 2018, 2021, 2023, 2025]
 print(f"\n历史低谷PE验证 (滚动8Y周期EPS):")
 for yr in TROUGH_KEY_YEARS:
     if yr in TROUGH_DATA:
@@ -1152,7 +1167,7 @@ def ch4b_price_pb_trend():
             url = ("https://push2his.eastmoney.com/api/qt/stock/kline/get"
                    "?secid=0.002714&fields1=f1,f2,f3,f4,f5,f6"
                    "&fields2=f51,f52,f53,f54,f55,f56"
-                   "&klt=101&fqt=0&beg=20170101&end=20260804&lmt=3000")
+                   "&klt=101&fqt=0&beg=20140101&end=20260804&lmt=4000")
             req = urllib.request.Request(url, headers={"User-Agent": "Mozilla/5.0"})
             with urllib.request.urlopen(req, timeout=15) as resp:
                 data = json.loads(resp.read().decode())
@@ -1202,8 +1217,8 @@ def ch4b_price_pb_trend():
         qtr = pd.DataFrame(qtr_list)
         qtr = qtr.merge(df_qf[["quarter", "BPS"]], on="quarter", how="left")
 
-    # 过滤：从2018Q1开始，且至少要有BPS
-    qtr = qtr[(qtr["quarter"] >= pd.Period("2018Q1", "Q")) & qtr["BPS"].notna()].reset_index(drop=True)
+    # 过滤：从2014Q1（上市）开始，且至少要有BPS
+    qtr = qtr[(qtr["quarter"] >= pd.Period("2014Q1", "Q")) & qtr["BPS"].notna()].reset_index(drop=True)
 
     # 2c. 计算季度 PB（用季度均价，而非季末单点价格）
     qtr["pb"] = qtr["avg_close"] / qtr["BPS"]
@@ -1281,6 +1296,10 @@ def ch4b_price_pb_trend():
         return None
 
     phases = [
+        {"start_q": "2014Q1", "end_q": "2017Q4",
+         "color": "rgba(189,195,199,0.05)",    # 淡灰 — 上市初期
+         "line_color": "rgba(189,195,199,0.25)",
+         "label": "上市初期", "sub": "小盘 · 非瘟前"},
         {"start_q": "2018Q1", "end_q": "2020Q4",
          "color": "rgba(243,156,18,0.08)",    # 暖金 — 扩张溢价
          "line_color": "rgba(243,156,18,0.35)",
@@ -1348,7 +1367,7 @@ def ch4b_price_pb_trend():
     fig.update_layout(
         template=PLOTLY_TEMPLATE,
         font=dict(family="Microsoft YaHei, PingFang SC, sans-serif", size=12, color="#1a1a1a"),
-        title=dict(text=f"股价走势与PB估值 — 季度均价粒度（2018Q1-{q_labels[-1]}）{mode_note}",
+        title=dict(text=f"股价走势与PB估值 — 季度均价粒度（2014Q1-{q_labels[-1]}）{mode_note}",
                    x=0.02, y=0.98, font=dict(size=15, color="#1a1a1a")),
         height=480,
         legend=dict(orientation="h", yanchor="bottom", y=1.08, font=dict(size=11)),
@@ -1379,7 +1398,7 @@ def ch4c_price_ttm_pe_trend():
             url = ("https://push2his.eastmoney.com/api/qt/stock/kline/get"
                    "?secid=0.002714&fields1=f1,f2,f3,f4,f5,f6"
                    "&fields2=f51,f52,f53,f54,f55,f56"
-                   "&klt=101&fqt=0&beg=20170101&end=20260804&lmt=3000")
+                   "&klt=101&fqt=0&beg=20140101&end=20260804&lmt=4000")
             req = urllib.request.Request(url, headers={"User-Agent": "Mozilla/5.0"})
             with urllib.request.urlopen(req, timeout=15) as resp:
                 data = json.loads(resp.read().decode())
@@ -1421,8 +1440,8 @@ def ch4c_price_ttm_pe_trend():
         qtr = pd.DataFrame(qtr_list)
         qtr = qtr.merge(df_qf[["quarter", "EPSJB"]], on="quarter", how="left")
 
-    # 过滤：2018Q1起，需要有EPS
-    qtr = qtr[(qtr["quarter"] >= pd.Period("2018Q1", "Q"))
+    # 过滤：2014Q1起，需要有EPS
+    qtr = qtr[(qtr["quarter"] >= pd.Period("2014Q1", "Q"))
               & qtr["EPSJB"].notna()].reset_index(drop=True)
 
     q_labels = qtr["quarter"].astype(str).tolist()
@@ -1533,6 +1552,9 @@ def ch4c_price_ttm_pe_trend():
         return f"{sum(vals)/len(vals):.0f}×" if vals else "—"
 
     phases = [
+        {"start_q": "2014Q1", "end_q": "2017Q4",
+         "color": "rgba(189,195,199,0.05)", "line_color": "rgba(189,195,199,0.25)",
+         "label": "上市初期", "sub": f"当期PE均值 ~{avg_pe_in_range('2014Q1','2017Q4')} · 小盘非瘟前"},
         {"start_q": "2018Q1", "end_q": "2020Q4",
          "color": "rgba(243,156,18,0.08)", "line_color": "rgba(243,156,18,0.35)",
          "label": "扩张溢价期", "sub": f"当期PE均值 ~{avg_pe_in_range('2018Q1','2020Q4')}"},
@@ -1591,7 +1613,7 @@ def ch4c_price_ttm_pe_trend():
     fig.update_layout(
         template=PLOTLY_TEMPLATE,
         font=dict(family="Microsoft YaHei, PingFang SC, sans-serif", size=12, color="#1a1a1a"),
-        title=dict(text=f"股价走势与当期PE（季均价·对数右轴·亏损断开）— 季度粒度（2018Q1-{q_labels[-1]}）{mode_note}",
+        title=dict(text=f"股价走势与当期PE（季均价·对数右轴·亏损断开）— 季度粒度（2014Q1-{q_labels[-1]}）{mode_note}",
                    x=0.02, y=0.98, font=dict(size=15, color="#1a1a1a")),
         height=480,
         legend=dict(orientation="h", yanchor="bottom", y=1.08, font=dict(size=11)),
@@ -1989,7 +2011,7 @@ def ch11_historical_validation():
             url = ("https://push2his.eastmoney.com/api/qt/stock/kline/get"
                    "?secid=0.002714&fields1=f1,f2,f3,f4,f5,f6"
                    "&fields2=f51,f52,f53,f54,f55,f56"
-                   "&klt=101&fqt=0&beg=20170101&end=20260804&lmt=3000")
+                   "&klt=101&fqt=0&beg=20140101&end=20260804&lmt=4000")
             req = urllib.request.Request(url, headers={"User-Agent": "Mozilla/5.0"})
             with urllib.request.urlopen(req, timeout=15) as resp:
                 records = []
@@ -2033,7 +2055,7 @@ def ch11_historical_validation():
         qtr = qtr.merge(df_qf[["quarter", "EPSJB", "BPS"]], on="quarter", how="left")
         mode_note = "（年度插值·季均价）"
 
-    qtr = qtr[(qtr["quarter"] >= pd.Period("2018Q1", "Q"))
+    qtr = qtr[(qtr["quarter"] >= pd.Period("2014Q1", "Q"))
               & qtr["BPS"].notna()].reset_index(drop=True)
 
     q_labels = qtr["quarter"].astype(str).tolist()
@@ -2323,7 +2345,7 @@ def ch11_historical_validation():
         template=PLOTLY_TEMPLATE,
         font=dict(family="Microsoft YaHei, PingFang SC, sans-serif", size=11, color="#1a1a1a"),
         title=dict(
-            text=f"历史估值方法验证 — 只使用各时点可得信息的回测（2018Q1–{q_labels[-1]}）",
+            text=f"历史估值方法验证 — 只使用各时点可得信息的回测（2014Q1–{q_labels[-1]}）",
             x=0.02, y=0.995, font=dict(size=15, color="#1a1a1a"),
         ),
         height=950,
