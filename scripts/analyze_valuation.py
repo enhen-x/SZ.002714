@@ -2185,98 +2185,129 @@ def ch11_historical_validation():
     current_dev_pe = ((current_pe15_val - CURRENT_PRICE) / CURRENT_PRICE * 100) if current_pe15_val else None
     current_dev_pb = ((current_pb3_val - CURRENT_PRICE) / CURRENT_PRICE * 100) if current_pb3_val else None
 
-    # ── 9. 绘图：三面板 ──
-    fig = make_subplots(
-        rows=3, cols=1,
-        subplot_titles=(
-            f"PE法：滚动8Y周期EPS × 12~28× vs 实际季均价{mode_note}",
-            f"PB法：BPS × 2.0~5.0× vs 实际季均价{mode_note}",
-            "估值偏离度（%）：各方法估值 vs 实际股价"
-        ),
-        vertical_spacing=0.10,
-        row_heights=[0.38, 0.38, 0.24],
-    )
+    # ── 9. 绘图：拆分为三个独立图表（各带独立图例 + 图下方解释）──
+    tick_indices, tick_labels = [], []
+    for i, lbl in enumerate(q_labels):
+        if lbl.endswith("Q1") or i == n - 1:
+            tick_indices.append(i)
+            tick_labels.append(lbl)
 
-    # ── Panel 1: PE + DCF ──
-    # PE估值区间带（12-28×填充）
+    _pe_label = "低估" if (current_dev_pe and current_dev_pe > 0) else "高估"
+    _pb_label = "低估" if (current_dev_pb and current_dev_pb > 0) else "高估"
+
+    def _style_fig(fig, title, y_title):
+        """统一图表样式：标题 + 独立图例 + X/Y轴"""
+        fig.update_layout(
+            template=PLOTLY_TEMPLATE,
+            font=dict(family="Microsoft YaHei, PingFang SC, sans-serif", size=11, color="#1a1a1a"),
+            title=dict(text=title, x=0.02, y=0.995, font=dict(size=15, color="#1a1a1a")),
+            height=440,
+            hovermode="x unified",
+            legend=dict(orientation="h", yanchor="bottom", y=1.02, x=0.5, xanchor="center",
+                        font=dict(size=10)),
+            margin=dict(l=55, r=25, t=70, b=50),
+        )
+        fig.update_xaxes(
+            tickmode="array", tickvals=tick_indices, ticktext=tick_labels,
+            range=[-0.5, n - 0.5],
+        )
+        fig.update_yaxes(title=y_title)
+
+    # ══════ 图① PE法（含 DCF + 近4季EPS×12×）══════
+    fig_pe = go.Figure()
     pe_lower = pe_data[12]
     pe_upper = pe_data[28]
-    fig.add_trace(go.Scatter(
+    fig_pe.add_trace(go.Scatter(
         x=list(range(n)) + list(range(n - 1, -1, -1)),
         y=pe_lower + [pe_upper[i] if pe_upper[i] is not None else pe_lower[n-1-i]
                        for i in range(n - 1, -1, -1)],
         fill="toself", fillcolor="rgba(39,174,96,0.08)",
         line=dict(color="rgba(255,255,255,0)", width=0),
-        name="PE 12-28× 估值区间", hoverinfo="skip", showlegend=True,
-    ), row=1, col=1)
-
-    # PE 15× 核心线
-    fig.add_trace(go.Scatter(
+        name="PE 12-28× 估值区间", hoverinfo="skip",
+    ))
+    fig_pe.add_trace(go.Scatter(
         x=list(range(n)), y=pe_data[15], mode="lines",
         line=dict(color=pe_colors[15], width=1.8, dash="dash"),
-        name="PE 15×（保守）", legendgroup="pe",
-    ), row=1, col=1)
-
-    # PE 22× 核心线
-    fig.add_trace(go.Scatter(
+        name="PE 15×（保守）",
+    ))
+    fig_pe.add_trace(go.Scatter(
         x=list(range(n)), y=pe_data[22], mode="lines",
         line=dict(color=pe_colors[22], width=1.8, dash="dash"),
-        name="PE 22×（乐观）", legendgroup="pe",
-    ), row=1, col=1)
-
-    # DCF 估值线
-    fig.add_trace(go.Scatter(
+        name="PE 22×（乐观）",
+    ))
+    fig_pe.add_trace(go.Scatter(
         x=list(range(n)), y=dcf_vals, mode="lines+markers",
         line=dict(color=C["purple"], width=2.0),
         marker=dict(size=4, color=C["purple"]),
-        name="DCF（永续年金简化）", legendgroup="pe",
-    ), row=1, col=1)
-
+        name="DCF（永续年金简化）",
+    ))
     # 近4季真实EPS × 12× — 反映市场实际定价（对近期利润而非周期均值定价）
-    fig.add_trace(go.Scatter(
+    fig_pe.add_trace(go.Scatter(
         x=list(range(n)), y=trailing_pe_12, mode="lines",
         line=dict(color="#e74c3c", width=1.5, dash="dot"),
-        name="近4季EPS × 12×（市场短期定价）", legendgroup="pe",
-    ), row=1, col=1)
-
-    # 实际股价
-    fig.add_trace(go.Scatter(
+        name="近4季EPS × 12×（市场短期定价）",
+    ))
+    fig_pe.add_trace(go.Scatter(
         x=list(range(n)), y=avg_close, mode="lines",
         line=dict(color=C["dark"], width=2.5),
-        name="实际季均价", legendgroup="pe",
-    ), row=1, col=1)
+        name="实际季均价",
+    ))
+    _style_fig(fig_pe, f"① PE法回测：滚动8Y周期EPS × 12~28× vs 实际季均价{mode_note}", "股价（元）")
 
-    # ── Panel 2: PB ──
+    pe_note = (
+        "<b>📊 PE法统计（历史中位偏离）</b>　"
+        + f"PE 15×: <b>{pe_dev_med:+.0f}%</b>　·　DCF简化: {dcf_dev_med:+.0f}%<br>"
+        + f"<b>📌 当前偏离：</b>PE 15× = {current_dev_pe:+.0f}%（{_pe_label}）<br><br>"
+        + "<b>🔍 方法解读——PE 15×（周期均值）</b><br>"
+        + "Graham &amp; Dodd 方法：8年滚动周期均值EPS × 15×，消除猪周期噪音，代表正常化价值。<br>"
+        + "优点：稳定、不随短期利润摇摆。缺点：无法解释市场的短期定价<br>"
+        + "（市场实际对近期利润定价）。<br><br>"
+        + "<b>🔴 近4季EPS×12×（红色虚线）——市场短期定价</b><br>"
+        + "用最近4个季度真实利润×12倍PE，大幅波动、跟踪市场情绪——<br>"
+        + "展示市场实际在做的事（对近期利润定价而非周期均值）。<br>"
+        + "与PE 15×的差距 = 市场情绪过度悲观/乐观的程度。"
+    )
+
+    # ══════ 图② PB法 ══════
+    fig_pb = go.Figure()
     pb_lower = pb_data[2.0]
     pb_upper = pb_data[5.0]
-    fig.add_trace(go.Scatter(
+    fig_pb.add_trace(go.Scatter(
         x=list(range(n)) + list(range(n - 1, -1, -1)),
         y=pb_lower + [pb_upper[i] if pb_upper[i] is not None else pb_lower[n-1-i]
                        for i in range(n - 1, -1, -1)],
-        fill="toself", fillcolor="rgba(26,188,156,0.08)",
+        fill="toself", fillcolor="rgba(41,128,185,0.08)",
         line=dict(color="rgba(255,255,255,0)", width=0),
-        name="PB 2-5× 估值区间", hoverinfo="skip", showlegend=True,
-    ), row=2, col=1)
-
-    fig.add_trace(go.Scatter(
+        name="PB 2-5× 估值区间", hoverinfo="skip",
+    ))
+    fig_pb.add_trace(go.Scatter(
         x=list(range(n)), y=pb_data[3.0], mode="lines",
         line=dict(color=pb_colors[3.0], width=1.8, dash="dash"),
-        name="PB 3.0×（中枢）", legendgroup="pb",
-    ), row=2, col=1)
-
-    fig.add_trace(go.Scatter(
+        name="PB 3.0×（中枢）",
+    ))
+    fig_pb.add_trace(go.Scatter(
         x=list(range(n)), y=pb_data[4.0], mode="lines",
         line=dict(color=pb_colors[4.0], width=1.8, dash="dash"),
-        name="PB 4.0×（乐观）", legendgroup="pb",
-    ), row=2, col=1)
-
-    fig.add_trace(go.Scatter(
+        name="PB 4.0×（乐观）",
+    ))
+    fig_pb.add_trace(go.Scatter(
         x=list(range(n)), y=avg_close, mode="lines",
         line=dict(color=C["dark"], width=2.5),
-        name="实际季均价", legendgroup="pb", showlegend=False,
-    ), row=2, col=1)
+        name="实际季均价",
+    ))
+    _style_fig(fig_pb, f"② PB法回测：BPS × 2.0~5.0× vs 实际季均价{mode_note}", "股价（元）")
 
-    # ── Panel 3: 偏离度 ──
+    pb_note = (
+        "<b>📊 PB法统计（历史中位偏离）</b>　"
+        + f"PB 3.0×: <b>{pb_dev_med:+.0f}%</b><br>"
+        + f"<b>📌 当前偏离：</b>PB 3.0× = {current_dev_pb:+.0f}%（{_pb_label}）<br><br>"
+        + "<b>🔍 方法解读——PB 3.0×（净资产法）</b><br>"
+        + "BPS × 3×。<b>长期低于股价是正常现象</b>——牧原 ROE&gt;20%，<br>"
+        + "市场为特许经营权支付溢价（不在净资产中体现）。<br>"
+        + "PB更适合作为<b>底价/地板参考</b>，而非目标价。"
+    )
+
+    # ══════ 图③ 偏离度 ══════
     pe15_dev_vals = []
     pb3_dev_vals = []
     dcf_dev_vals = []
@@ -2294,127 +2325,53 @@ def ch11_historical_validation():
         else:
             dcf_dev_vals.append(None)
 
-    fig.add_trace(go.Scatter(
-        x=list(range(n)), y=pe15_dev_vals, mode="lines",
-        line=dict(color=pe_colors[15], width=1.8),
-        name="PE 15× 偏离度（周期均值法）", legendgroup="dev",
-    ), row=3, col=1)
-
-    fig.add_trace(go.Scatter(
-        x=list(range(n)), y=pb3_dev_vals, mode="lines",
-        line=dict(color=pb_colors[3.0], width=1.8, dash="dash"),
-        name="PB 3.0× 偏离度（净资产法）", legendgroup="dev",
-    ), row=3, col=1)
-
-    fig.add_trace(go.Scatter(
-        x=list(range(n)), y=dcf_dev_vals, mode="lines",
-        line=dict(color=C["purple"], width=1.8, dash="dot"),
-        name="DCF 偏离度", legendgroup="dev",
-    ), row=3, col=1)
-
-    # 零线
-    fig.add_hline(y=0, line_dash="solid", line_color="#999", line_width=1,
-                  row=3, col=1)
-    # ±20% 参考线
-    fig.add_hline(y=20, line_dash="dot", line_color="#bbb", line_width=0.8,
-                  row=3, col=1)
-    fig.add_hline(y=-20, line_dash="dot", line_color="#bbb", line_width=0.8,
-                  row=3, col=1)
-
-    # ── X轴刻度 ──
-    tick_indices, tick_labels = [], []
-    for i, lbl in enumerate(q_labels):
-        if lbl.endswith("Q1") or i == n - 1:
-            tick_indices.append(i)
-            tick_labels.append(lbl)
-
-    for row_idx in [1, 2, 3]:
-        fig.update_xaxes(
-            tickmode="array", tickvals=tick_indices, ticktext=tick_labels,
-            range=[-0.5, n - 0.5], row=row_idx, col=1,
-        )
-
-    # ── 计算偏离度实际范围（动态设置Y轴）──
     all_dev = [v for v in pe15_dev_vals + pb3_dev_vals + dcf_dev_vals
                if v is not None and not (isinstance(v, float) and np.isnan(v))]
     dev_min = min(all_dev) if all_dev else -100
     dev_max = max(all_dev) if all_dev else 200
-    # 加15% padding，且至少延伸到±20%参考线
     dev_pad = (dev_max - dev_min) * 0.15
     dev_lo = min(dev_min - dev_pad, -25)
     dev_hi = max(dev_max + dev_pad, 25)
 
-    fig.update_yaxes(title="股价（元）", row=1, col=1)
-    fig.update_yaxes(title="股价（元）", row=2, col=1)
-    fig.update_yaxes(title="偏离度（%）", row=3, col=1,
-                     range=[dev_lo, dev_hi])
+    fig_dev = go.Figure()
+    fig_dev.add_trace(go.Scatter(
+        x=list(range(n)), y=pe15_dev_vals, mode="lines",
+        line=dict(color=pe_colors[15], width=1.8),
+        name="PE 15× 偏离度（周期均值法）",
+    ))
+    fig_dev.add_trace(go.Scatter(
+        x=list(range(n)), y=pb3_dev_vals, mode="lines",
+        line=dict(color=pb_colors[3.0], width=1.8, dash="dash"),
+        name="PB 3.0× 偏离度（净资产法）",
+    ))
+    fig_dev.add_trace(go.Scatter(
+        x=list(range(n)), y=dcf_dev_vals, mode="lines",
+        line=dict(color=C["purple"], width=1.8, dash="dot"),
+        name="DCF 偏离度",
+    ))
+    fig_dev.add_hline(y=0, line_dash="solid", line_color="#999", line_width=1)
+    fig_dev.add_hline(y=20, line_dash="dot", line_color="#bbb", line_width=0.8)
+    fig_dev.add_hline(y=-20, line_dash="dot", line_color="#bbb", line_width=0.8)
+    _style_fig(fig_dev, "③ 估值偏离度（%）：各方法估值 vs 实际股价", "偏离度（%）")
+    fig_dev.update_yaxes(range=[dev_lo, dev_hi])
 
-    # ── 统计注释 + 方法论解释 ──
-    _pe_label = "低估" if (current_dev_pe and current_dev_pe > 0) else "高估"
-    _pb_label = "低估" if (current_dev_pb and current_dev_pb > 0) else "高估"
-    stats_text = (
-        "<b>📊 历史偏离统计（中位数）</b><br>"
-        + f"PE 15×（周期均值）: {pe_dev_med:+.0f}%<br>"
-        + f"PB 3.0×（净资产法）: {pb_dev_med:+.0f}%<br>"
-        + f"DCF简化: {dcf_dev_med:+.0f}%<br>"
-        + "<br><b>📌 当前偏离</b><br>"
-        + f"PE 15×: {current_dev_pe:+.0f}%（{_pe_label}）<br>"
-        + f"PB 3.0×: {current_dev_pb:+.0f}%（{_pb_label}）"
+    dev_note = (
+        "<b>📊 偏离度统计（历史中位偏离）</b>　"
+        + f"PE 15×: {pe_dev_med:+.0f}%　·　PB 3.0×: {pb_dev_med:+.0f}%　·　DCF: {dcf_dev_med:+.0f}%<br><br>"
+        + "<b>🔍 如何解读偏离度</b><br>"
+        + "正值 = 估值高于股价 = 低估；负值 = 高估。<br>"
+        + "若某种方法历史上长期为正（如PB），说明市场长期给予该口径溢价，<br>"
+        + "该方法应作<b>地板/底价参考</b>而非目标价。<br>"
+        + "真正有效的估值方法，股价应在估值区间内上下穿越<br>"
+        + "（偏离度围绕0上下摆动）。三条线同步转正，往往意味着周期底部机会。"
     )
 
-    # 方法论解读注释（右侧）
-    method_note = (
-        "<b>🔍 三条线的含义</b><br><br>"
-        + "<b>PE 15×（周期均值）</b>: Graham & Dodd<br>"
-        + "方法——8年滚动周期均值EPS × 15×。<br>"
-        + "消除猪周期噪音,代表正常化价值。<br>"
-        + "<b>优点</b>: 稳定、不随短期利润摇摆。<br>"
-        + "<b>缺点</b>: 无法解释市场的短期定价<br>"
-        + "(市场实际对近期利润定价)。<br><br>"
-        + "<b>PB 3.0×（净资产法）</b>: BPS × 3×。<br>"
-        + "<b>长期低于股价</b>是正常现象——牧原<br>"
-        + "ROE>20%, 市场为特许经营权支付<br>"
-        + "溢价(不在净资产中体现)。PB更适合<br>"
-        + "作为底价/地板参考, 非目标价。<br><br>"
-        + "<b>近4季EPS×12× (红色虚线)</b>:<br>"
-        + "用最近4个季度真实利润×12倍PE。<br>"
-        + "大幅波动、跟踪市场情绪——展示了<br>"
-        + "市场实际在做的事(对近期利润<br>"
-        + "定价而非周期均值)。与PE 15×的差距<br>"
-        + "= 市场情绪过度悲观/乐观的程度。"
-    )
-
-    fig.add_annotation(
-        x=0.99, y=0.95, xref="paper", yref="paper",
-        text=stats_text, showarrow=False,
-        font=dict(size=10, color="#333", family="Consolas, monospace"),
-        align="left", bgcolor="rgba(255,255,255,0.85)",
-        bordercolor="#ddd", borderwidth=1, borderpad=8,
-    )
-
-    # 方法论解读注释（右侧中部）
-    fig.add_annotation(
-        x=0.99, y=0.40, xref="paper", yref="paper",
-        text=method_note, showarrow=False,
-        font=dict(size=9, color="#555", family="Microsoft YaHei, PingFang SC, sans-serif"),
-        align="left", bgcolor="rgba(255,255,255,0.85)",
-        bordercolor="#ddd", borderwidth=1, borderpad=8,
-    )
-
-    fig.update_layout(
-        template=PLOTLY_TEMPLATE,
-        font=dict(family="Microsoft YaHei, PingFang SC, sans-serif", size=11, color="#1a1a1a"),
-        title=dict(
-            text=f"历史估值方法验证 — 只使用各时点可得信息的回测（2014Q1–{q_labels[-1]}）",
-            x=0.02, y=0.995, font=dict(size=15, color="#1a1a1a"),
-        ),
-        height=950,
-        hovermode="x unified",
-        legend=dict(orientation="h", yanchor="bottom", y=1.02, font=dict(size=10)),
-        margin=dict(l=55, r=280, t=80, b=55),
-    )
-
-    return fig
+    # 返回三张独立图表：(fig, 图下方解释)
+    return [
+        (fig_pe, pe_note),
+        (fig_pb, pb_note),
+        (fig_dev, dev_note),
+    ]
 
 
 # ==================== HTML 构建 ====================
@@ -2523,6 +2480,7 @@ table{border-collapse:collapse;width:100%;font-size:13px;margin:12px 0}
 th,td{border-bottom:1px solid #eee;padding:8px 10px;text-align:left;vertical-align:top}
 th{font-weight:500;color:#888;font-size:12px;letter-spacing:.3px}
 .source{font-size:11px;color:#bbb;margin-bottom:8px}
+.chart-note{border-left:3px solid #3498db;background:#f8fafc;padding:10px 16px;margin:0 0 28px;font-size:12.5px;line-height:1.7;color:#555}
 .box{border-left:2px solid #3498db;padding:12px 18px;margin:16px 0}
 .box-red{border-left:2px solid #c0392b;padding:12px 18px;margin:16px 0}
 .box-green{border-left:2px solid #27ae60;padding:12px 18px;margin:16px 0}
@@ -2715,9 +2673,9 @@ HTML = """<!DOCTYPE html>
     {trough_chart}
 
     <h3>7f. 历史估值方法验证：全方法回测</h3>
-    <p class="source">来源：各估值方法在历史每个时点、只使用"当时可得"数据的回测——PE法（滚动8Y周期EPS）、PB法（BPS）、DCF法（简化永续年金）</p>
+    <p class="source">来源：各估值方法在历史每个时点、只使用"当时可得"数据的回测——PE法（滚动8Y周期EPS）、PB法（BPS）、DCF法（简化永续年金）。三张图各带独立图例，图下方附统计与解读。</p>
     {hist_validation_ch11}
-    <p style="font-size:12px;color:#888">三面板自上而下：① PE法回测（12-28×估值区间 vs 实价）+ DCF简化线 ② PB法回测（2-5×估值区间 vs 实价）③ 偏离度（估值/股价-1，正值=估值高于股价=低估）。<b>核心理念</b>：如果一种估值方法在历史上始终高于或始终低于股价，说明该方法需要校准——真正有效的估值方法，股价应该在估值区间内上下穿越。右上角统计框显示各方法历史中位偏离和当前偏离。</p>
+    <p style="font-size:12px;color:#888">三张图自上而下：① PE法回测（12-28×估值区间 vs 实价）+ DCF简化线 + 近4季EPS×12× ② PB法回测（2-5×估值区间 vs 实价）③ 偏离度（估值/股价-1，正值=估值高于股价=低估）。<b>核心理念</b>：如果一种估值方法在历史上始终高于或始终低于股价，说明该方法需要校准——真正有效的估值方法，股价应该在估值区间内上下穿越。</p>
 
     <div class="box-red">
       <p style="margin:0">
@@ -2928,9 +2886,24 @@ def main():
     chart_html = {}
     for name, func in chart_funcs:
         try:
-            fig = func()
-            chart_html[name] = fig.to_html(full_html=False, include_plotlyjs=False, div_id=name,
-                                           config={"responsive": True, "displayModeBar": False})
+            result = func()
+            if isinstance(result, (list, tuple)):
+                # 支持多图返回：(fig, note_html) 列表 → 每个图独立div + 图下方解释
+                parts = []
+                for idx, item in enumerate(result, 1):
+                    if isinstance(item, tuple) and len(item) == 2:
+                        fig, note_html = item
+                    else:
+                        fig, note_html = item, ""
+                    div_id = f"{name}_{idx}"
+                    parts.append(fig.to_html(full_html=False, include_plotlyjs=False, div_id=div_id,
+                                             config={"responsive": True, "displayModeBar": False}))
+                    if note_html:
+                        parts.append(f'<div class="chart-note">' + note_html + '</div>')
+                chart_html[name] = "".join(parts)
+            else:
+                chart_html[name] = result.to_html(full_html=False, include_plotlyjs=False, div_id=name,
+                                                  config={"responsive": True, "displayModeBar": False})
             print(f"  ✅ {name}")
         except Exception as e:
             print(f"  ❌ {name}: {e}")
