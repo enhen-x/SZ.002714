@@ -343,12 +343,13 @@ else:
 # 目的：用历史低谷数据校准周期PE下限——模型PE 15-22×是否与市场实际定价一致？
 # 方法：对每个低谷年份，计算"股价最低点 ÷ 当时滚动8年周期均值EPS = 低谷周期PE"
 
-# 历史股价高低点（前复权，来源：同花顺/东方财富历史行情）
+# 历史股价高低点（不复权，来源：新浪财经API日线数据，已缓存至 data/牧原_日线股价.csv）
 STOCK_ANNUAL_RANGE = {
-    2014: (58, 22), 2015: (78, 28), 2016: (34, 22),  # 估计值（不复权），待日线数据拉取后校准
-    2017: (15, 9), 2018: (15, 5), 2019: (35, 14), 2020: (100, 35),
-    2021: (92, 40), 2022: (63, 45), 2023: (55, 35), 2024: (88, 48), 2025: (79, 50),
-    2026: (50, 35),  # 截至2026-08-04：年初~50 → 年中低点~35，当前39.3
+    2014: (65.00, 28.88), 2015: (112.98, 32.00), 2016: (63.80, 22.60),
+    2017: (56.39, 22.52), 2018: (62.88, 20.40), 2019: (103.60, 28.12),
+    2020: (139.92, 65.18), 2021: (131.00, 39.01), 2022: (65.99, 45.59),
+    2023: (51.66, 31.17), 2024: (50.78, 34.24), 2025: (59.68, 35.72),
+    2026: (51.85, 31.81),  # 截至2026-08-04
 }
 
 # 从季度财报中加载各年度末的BPS（避免用当前总股本反算历史BPS导致的偏差）
@@ -395,12 +396,17 @@ pre_2019 = [td["pe_cycle_low"] for yr, td in TROUGH_DATA.items() if yr < 2019 an
 post_2020 = [td["pe_cycle_low"] for yr, td in TROUGH_DATA.items() if yr >= 2021 and td["pe_cycle_low"] < 50]
 avg_trough_pre = sum(pre_2019)/len(pre_2019) if pre_2019 else 0
 avg_trough_post = sum(post_2020)/len(post_2020) if post_2020 else 0
-# 2021年后最低低谷周期PE（2023年亏损年的20.6×是真正的压力测试）
+# 2021年后最低低谷周期PE — 当前估值的"硬地板"
 trough_pe_floor = min(post_2020) if post_2020 else 20
+trough_pe_floor_yr = min(
+    [(yr, td["pe_cycle_low"]) for yr, td in TROUGH_DATA.items()
+     if yr >= 2021 and td["pe_cycle_low"] < 50],
+    key=lambda x: x[1]
+)[0] if post_2020 else "N/A"
 trough_pe_avg = avg_trough_post
 print(f"  2018前低谷PE均值: {avg_trough_pre:.1f}× (小盘/非瘟前)")
 print(f"  2021后低谷PE均值: {avg_trough_post:.1f}× ({len(post_2020)}个年份)")
-print(f"  2021后低谷PE下限: {trough_pe_floor:.1f}× (发生在2023亏损年)")
+print(f"  2021后低谷PE下限: {trough_pe_floor:.1f}× (发生在{trough_pe_floor_yr}年)")
 
 # 当前股价 vs 历史低谷PE下限
 current_cycle_pe = CURRENT_PRICE / AVG8_EPS
