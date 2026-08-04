@@ -1181,30 +1181,32 @@ def ch4b_price_pb_trend():
 
     # 2b. 季度价格
     if df_daily is not None:
-        # 有真实日线：按季度聚合
+        # 有真实日线：按季度聚合，使用季度均价（更反映"典型"估值水平）
         df_daily["quarter"] = df_daily["date"].dt.to_period("Q")
         qtr_price = df_daily.groupby("quarter").agg(
-            close=("close", "last"), high=("high", "max"), low=("low", "min")
+            close=("close", "last"), avg_close=("close", "mean"),
+            high=("high", "max"), low=("low", "min")
         ).reset_index()
         # Merge with BPS
         qtr = qtr_price.merge(df_qf[["quarter", "BPS"]], on="quarter", how="left")
     else:
-        # 回退：从年度高低点估算季度收盘价（年中值近似）
+        # 回退：从年度高低点估算季度均价（年中值近似）
         qtr_list = []
         for yr, (sh, sl) in sorted(STOCK_ANNUAL_RANGE.items()):
             mid = (sh + sl) / 2
             for q in range(1, 5):
                 q_str = f"{yr}Q{q}"
                 q_period = pd.Period(q_str, freq="Q")
-                qtr_list.append({"quarter": q_period, "close": mid, "high": sh, "low": sl})
+                qtr_list.append({"quarter": q_period, "close": mid, "avg_close": mid,
+                                 "high": sh, "low": sl})
         qtr = pd.DataFrame(qtr_list)
         qtr = qtr.merge(df_qf[["quarter", "BPS"]], on="quarter", how="left")
 
     # 过滤：从2018Q1开始，且至少要有BPS
     qtr = qtr[(qtr["quarter"] >= pd.Period("2018Q1", "Q")) & qtr["BPS"].notna()].reset_index(drop=True)
 
-    # 2c. 计算季度 PB
-    qtr["pb"] = qtr["close"] / qtr["BPS"]
+    # 2c. 计算季度 PB（用季度均价，而非季末单点价格）
+    qtr["pb"] = qtr["avg_close"] / qtr["BPS"]
     qtr["quarter_label"] = qtr["quarter"].astype(str)
 
     # ── 3. 当前实时数据点 ──
@@ -1214,6 +1216,7 @@ def ch4b_price_pb_trend():
     # ── 4. 绘图 ──
     q_labels = qtr["quarter_label"].tolist()
     close_vals = qtr["close"].tolist()
+    avg_close_vals = qtr["avg_close"].tolist()
     high_vals = qtr["high"].tolist()
     low_vals = qtr["low"].tolist()
     pb_raw = qtr["pb"].tolist()
@@ -1229,14 +1232,14 @@ def ch4b_price_pb_trend():
         name="季度股价区间", hoverinfo="skip",
     ), secondary_y=False)
 
-    # 季度收盘价线
-    hover_price = [f"{q_labels[i]}<br>收盘: {close_vals[i]:.1f}元<br>最高: {high_vals[i]:.1f}元 / 最低: {low_vals[i]:.1f}元"
+    # 季度均价线
+    hover_price = [f"{q_labels[i]}<br>季均价: {avg_close_vals[i]:.1f}元<br>季末收盘: {close_vals[i]:.1f}元<br>最高: {high_vals[i]:.1f}元 / 最低: {low_vals[i]:.1f}元"
                    for i in range(len(qtr))]
     fig.add_trace(go.Scatter(
-        x=list(range(len(qtr))), y=close_vals, mode="lines+markers",
+        x=list(range(len(qtr))), y=avg_close_vals, mode="lines+markers",
         line=dict(color=C["midblue"], width=2.2),
         marker=dict(size=6, color=C["midblue"], line=dict(color="white", width=1.5)),
-        name="季度收盘价", text=hover_price, hoverinfo="text",
+        name="季度均价", text=hover_price, hoverinfo="text",
     ), secondary_y=False)
 
     # 当前股价水平线
@@ -1247,15 +1250,15 @@ def ch4b_price_pb_trend():
                        text=f"当前 {CURRENT_PRICE}元",
                        showarrow=False, font=dict(size=10, color=C["midblue"]), xanchor="right")
 
-    # PB 折线（右轴）—— 完整连续，不需要断开
+    # PB 折线（右轴）—— 用季均价计算，反映季度内"典型"估值
     hover_pb = []
     for i in range(len(qtr)):
-        hover_pb.append(f"{q_labels[i]}<br>PB = {pb_raw[i]:.2f}×<br>收盘 = {close_vals[i]:.1f}元<br>BPS = {qtr['BPS'].iloc[i]:.2f}元")
+        hover_pb.append(f"{q_labels[i]}<br>PB = {pb_raw[i]:.2f}×<br>季均价 = {avg_close_vals[i]:.1f}元<br>BPS = {qtr['BPS'].iloc[i]:.2f}元")
     fig.add_trace(go.Scatter(
         x=list(range(len(qtr))), y=pb_raw, mode="lines+markers",
         line=dict(color=C["red"], width=2.2),
         marker=dict(size=6, color=C["red"], line=dict(color="white", width=1.5)),
-        name="季度末PB（市净率）", text=hover_pb, hoverinfo="text",
+        name="季度PB（季均价÷BPS）", text=hover_pb, hoverinfo="text",
         connectgaps=True,
     ), secondary_y=True)
 
@@ -1341,11 +1344,11 @@ def ch4b_price_pb_trend():
         tickfont=dict(size=11, color=C["red"]),
         secondary_y=True,
     )
-    mode_note = "（日线聚合）" if df_daily is not None else "（年度高低点插值，季度BPS来自财报）"
+    mode_note = "（季均价·日线聚合）" if df_daily is not None else "（年度高低点插值·季均价，季度BPS来自财报）"
     fig.update_layout(
         template=PLOTLY_TEMPLATE,
         font=dict(family="Microsoft YaHei, PingFang SC, sans-serif", size=12, color="#1a1a1a"),
-        title=dict(text=f"股价走势与PB估值 — 季度粒度（2018Q1-{q_labels[-1]}）{mode_note}",
+        title=dict(text=f"股价走势与PB估值 — 季度均价粒度（2018Q1-{q_labels[-1]}）{mode_note}",
                    x=0.02, y=0.98, font=dict(size=15, color="#1a1a1a")),
         height=480,
         legend=dict(orientation="h", yanchor="bottom", y=1.08, font=dict(size=11)),
@@ -1399,11 +1402,12 @@ def ch4c_price_ttm_pe_trend():
     df_qf = df_qf.sort_values("REPORT_DATE")
     df_qf["quarter"] = df_qf["REPORT_DATE"].dt.to_period("Q")
 
-    # ── 3. 季度价格 ──
+    # ── 3. 季度价格（季度均价反映典型估值水平）──
     if df_daily is not None:
         df_daily["quarter"] = df_daily["date"].dt.to_period("Q")
         qtr_price = df_daily.groupby("quarter").agg(
-            close=("close", "last"), high=("high", "max"), low=("low", "min")
+            close=("close", "last"), avg_close=("close", "mean"),
+            high=("high", "max"), low=("low", "min")
         ).reset_index()
         qtr = qtr_price.merge(df_qf[["quarter", "EPSJB"]], on="quarter", how="left")
     else:
@@ -1412,7 +1416,8 @@ def ch4c_price_ttm_pe_trend():
             mid = (sh + sl) / 2
             for q in range(1, 5):
                 qtr_list.append({"quarter": pd.Period(f"{yr}Q{q}", freq="Q"),
-                                 "close": mid, "high": sh, "low": sl})
+                                 "close": mid, "avg_close": mid,
+                                 "high": sh, "low": sl})
         qtr = pd.DataFrame(qtr_list)
         qtr = qtr.merge(df_qf[["quarter", "EPSJB"]], on="quarter", how="left")
 
@@ -1422,18 +1427,19 @@ def ch4c_price_ttm_pe_trend():
 
     q_labels = qtr["quarter"].astype(str).tolist()
     close_vals = qtr["close"].tolist()
+    avg_close_vals = qtr["avg_close"].tolist()
     high_vals = qtr["high"].tolist()
     low_vals = qtr["low"].tolist()
     eps_q_vals = qtr["EPSJB"].tolist()
     is_loss = (qtr["EPSJB"] <= 0).tolist()
 
-    # ── 4. 当期PE = 股价 ÷ (单季EPS × 4)（亏损时断开）──
+    # ── 4. 当期PE = 季均价 ÷ (单季EPS × 4)（亏损时断开）──
     pe_q_vals = []
     for i in range(len(qtr)):
         if is_loss[i] or eps_q_vals[i] <= 0:
             pe_q_vals.append(None)
         else:
-            pe_q_vals.append(close_vals[i] / (eps_q_vals[i] * 4))
+            pe_q_vals.append(avg_close_vals[i] / (eps_q_vals[i] * 4))
 
     # 当前当期PE
     latest_eps_q = eps_q_vals[-1] if eps_q_vals else None
@@ -1451,14 +1457,14 @@ def ch4c_price_ttm_pe_trend():
         name="季度股价区间", hoverinfo="skip",
     ), secondary_y=False)
 
-    # 季度收盘价线
-    hover_p = [f"{q_labels[i]}<br>收盘: {close_vals[i]:.1f}元"
+    # 季度均价线
+    hover_p = [f"{q_labels[i]}<br>季均价: {avg_close_vals[i]:.1f}元<br>季末收盘: {close_vals[i]:.1f}元"
                for i in range(len(qtr))]
     fig.add_trace(go.Scatter(
-        x=list(range(len(qtr))), y=close_vals, mode="lines+markers",
+        x=list(range(len(qtr))), y=avg_close_vals, mode="lines+markers",
         line=dict(color=C["midblue"], width=2.2),
         marker=dict(size=6, color=C["midblue"], line=dict(color="white", width=1.5)),
-        name="季度收盘价", text=hover_p, hoverinfo="text",
+        name="季度均价", text=hover_p, hoverinfo="text",
     ), secondary_y=False)
 
     # 当前股价水平线
@@ -1469,14 +1475,14 @@ def ch4c_price_ttm_pe_trend():
                        text=f"当前 {CURRENT_PRICE}元",
                        showarrow=False, font=dict(size=10, color=C["midblue"]), xanchor="right")
 
-    # TTM PE 折线（右轴，对数刻度）—— 亏损季度断开
+    # 当期PE 折线（右轴，对数刻度）—— 亏损季度断开
     hover_pe = []
     for i in range(len(qtr)):
         if is_loss[i]:
             hover_pe.append(f"{q_labels[i]}<br>单季EPS = {eps_q_vals[i]:.2f}元<br>亏损 · PE无意义")
         else:
             hover_pe.append(f"{q_labels[i]}<br>当期PE = {pe_q_vals[i]:.1f}×<br>"
-                           f"单季EPS = {eps_q_vals[i]:.2f}元 · 收盘 = {close_vals[i]:.1f}元")
+                           f"单季EPS = {eps_q_vals[i]:.2f}元 · 季均价 = {avg_close_vals[i]:.1f}元")
     fig.add_trace(go.Scatter(
         x=list(range(len(qtr))), y=pe_q_vals, mode="lines+markers",
         line=dict(color=C["teal"], width=2.2),
@@ -1585,7 +1591,7 @@ def ch4c_price_ttm_pe_trend():
     fig.update_layout(
         template=PLOTLY_TEMPLATE,
         font=dict(family="Microsoft YaHei, PingFang SC, sans-serif", size=12, color="#1a1a1a"),
-        title=dict(text=f"股价走势与当期PE（对数右轴·亏损断开）— 季度粒度（2018Q1-{q_labels[-1]}）{mode_note}",
+        title=dict(text=f"股价走势与当期PE（季均价·对数右轴·亏损断开）— 季度粒度（2018Q1-{q_labels[-1]}）{mode_note}",
                    x=0.02, y=0.98, font=dict(size=15, color="#1a1a1a")),
         height=480,
         legend=dict(orientation="h", yanchor="bottom", y=1.08, font=dict(size=11)),
@@ -1958,6 +1964,367 @@ def ch10_trough_pe():
     )
     return fig
 
+
+def ch11_historical_validation():
+    """历史估值方法验证 — 用历史股价回测每种估值方法的跟踪准确性
+
+    核心原则：每个历史时点只使用"当时可得"的信息，不做前视偏差（look-ahead bias）。
+    验证三种方法：PE法、PB法、DCF法（简化）。
+
+    回答的问题：
+    - 哪些估值方法在历史上真正跟踪了股价？
+    - 当前的"低估"判断在历史上类似时点是否也被验证过？
+    """
+    import os, urllib.request, json, ssl
+
+    # ── 1. 加载日线价格 ──
+    daily_csv = ROOT / "data" / "牧原_日线股价.csv"
+    df_daily = None
+    if daily_csv.exists():
+        df_daily = pd.read_csv(daily_csv)
+        df_daily["date"] = pd.to_datetime(df_daily["date"])
+    if df_daily is None:
+        try:
+            ssl._create_default_https_context = ssl._create_unverified_context
+            url = ("https://push2his.eastmoney.com/api/qt/stock/kline/get"
+                   "?secid=0.002714&fields1=f1,f2,f3,f4,f5,f6"
+                   "&fields2=f51,f52,f53,f54,f55,f56"
+                   "&klt=101&fqt=0&beg=20170101&end=20260804&lmt=3000")
+            req = urllib.request.Request(url, headers={"User-Agent": "Mozilla/5.0"})
+            with urllib.request.urlopen(req, timeout=15) as resp:
+                records = []
+                for k in json.loads(resp.read().decode())["data"]["klines"]:
+                    p = k.split(",")
+                    records.append({"date": p[0], "close": float(p[2]),
+                                    "high": float(p[3]), "low": float(p[4])})
+                df_daily = pd.DataFrame(records)
+                df_daily["date"] = pd.to_datetime(df_daily["date"])
+                os.makedirs(daily_csv.parent, exist_ok=True)
+                df_daily.to_csv(daily_csv, index=False, columns=["date","close","high","low"])
+        except Exception:
+            pass
+
+    # ── 2. 加载季度财务数据 ──
+    df_qf = pd.read_csv(ROOT / "data" / "主要财务指标_按单季度.csv", dtype=str)
+    df_qf["REPORT_DATE"] = pd.to_datetime(df_qf["REPORT_DATE"])
+    df_qf["EPSJB"] = pd.to_numeric(df_qf["EPSJB"], errors="coerce")
+    df_qf["BPS"] = pd.to_numeric(df_qf["BPS"], errors="coerce")
+    df_qf = df_qf.sort_values("REPORT_DATE")
+    df_qf["quarter"] = df_qf["REPORT_DATE"].dt.to_period("Q")
+
+    # ── 3. 按季度聚合 ──
+    if df_daily is not None:
+        df_daily["quarter"] = df_daily["date"].dt.to_period("Q")
+        qtr_price = df_daily.groupby("quarter").agg(
+            close=("close", "last"), avg_close=("close", "mean"),
+            high=("high", "max"), low=("low", "min")
+        ).reset_index()
+        qtr = qtr_price.merge(df_qf[["quarter", "EPSJB", "BPS"]], on="quarter", how="left")
+        mode_note = "（日线聚合·季均价）"
+    else:
+        qtr_list = []
+        for yr, (sh, sl) in sorted(STOCK_ANNUAL_RANGE.items()):
+            mid = (sh + sl) / 2
+            for q in range(1, 5):
+                qtr_list.append({"quarter": pd.Period(f"{yr}Q{q}", freq="Q"),
+                                 "close": mid, "avg_close": mid,
+                                 "high": sh, "low": sl})
+        qtr = pd.DataFrame(qtr_list)
+        qtr = qtr.merge(df_qf[["quarter", "EPSJB", "BPS"]], on="quarter", how="left")
+        mode_note = "（年度插值·季均价）"
+
+    qtr = qtr[(qtr["quarter"] >= pd.Period("2018Q1", "Q"))
+              & qtr["BPS"].notna()].reset_index(drop=True)
+
+    q_labels = qtr["quarter"].astype(str).tolist()
+    n = len(qtr)
+    avg_close = qtr["avg_close"].tolist()
+    bps_vals = qtr["BPS"].tolist()
+
+    # ── 4. 滚动8Y周期EPS（前视无偏：每个季度只用当时可得的完整财年数据）──
+    all_years = sorted(FIN.keys())
+    # 年报通常在次年4月发布，所以Q1可用上上年数据，Q2-Q4可用上年数据
+    # 保守处理：统一使用 quarter.year - 1 作为最新可用财年
+
+    cycle_eps_vals = []  # 每个季度的滚动8Y周期EPS
+    for i in range(n):
+        q_yr = qtr["quarter"].iloc[i].year
+        latest_fy = q_yr - 1  # 保守：当前年的年报尚未发布
+        eligible = [y for y in all_years if y <= latest_fy]
+        window = eligible[-8:] if len(eligible) >= 8 else eligible
+        if window:
+            eps_list = [FIN[y]["eps"] for y in window]
+            cycle_eps_vals.append(sum(eps_list) / len(eps_list))
+        else:
+            cycle_eps_vals.append(None)
+
+    # ── 5. PE法估值线（滚动8Y周期EPS × PE倍数）──
+    pe_presets = [12, 15, 22, 28]
+    pe_colors = {12: "#27ae60", 15: "#1abc9c", 22: "#e67e22", 28: "#c0392b"}
+    pe_data = {}
+    for pe_m in pe_presets:
+        vals = []
+        for i in range(n):
+            if cycle_eps_vals[i] and cycle_eps_vals[i] > 0:
+                vals.append(cycle_eps_vals[i] * pe_m)
+            else:
+                vals.append(None)
+        pe_data[pe_m] = vals
+
+    # ── 6. PB法估值线（BPS × PB倍数）──
+    pb_presets = [2.0, 3.0, 4.0, 5.0]
+    pb_colors = {2.0: "#27ae60", 3.0: "#1abc9c", 4.0: "#e67e22", 5.0: "#c0392b"}
+    pb_data = {}
+    for pb_m in pb_presets:
+        vals = []
+        for i in range(n):
+            if pd.notna(bps_vals[i]) and bps_vals[i] > 0:
+                vals.append(bps_vals[i] * pb_m)
+            else:
+                vals.append(None)
+        pb_data[pb_m] = vals
+
+    # ── 7. DCF法估值线（年度粒度，简化永续年金法）──
+    wacc = 0.085
+    g_val = 0.02
+    dcf_annual = {}  # year -> dcf_per_share
+    for yr in sorted(all_years):
+        if yr < 2018:
+            continue
+        # 截至yr年的滚动FCF（用yr及之前年份）
+        eligible_fcf = [y for y in all_years if y <= yr]
+        fcf_window = eligible_fcf[-8:] if len(eligible_fcf) >= 8 else eligible_fcf
+        fcf_vals_list = [(FIN[y]["ocf"] + FIN[y]["capex"]) for y in fcf_window]
+        avg_fcf = sum(fcf_vals_list) / len(fcf_vals_list)
+        if avg_fcf <= 0:
+            dcf_annual[yr] = None
+            continue
+        ev = avg_fcf / (wacc - g_val)
+        debt = FIN[yr]["interest_debt"]
+        equity = ev - debt
+        dcf_annual[yr] = equity / TOTAL_SHARES
+
+    # 将DCF年度值映射到季度
+    dcf_vals = []
+    for i in range(n):
+        q_yr = qtr["quarter"].iloc[i].year
+        # 该季度能看到的最近DCF值（用上一年数据）
+        yr_for_dcf = q_yr - 1 if q_yr - 1 in dcf_annual else q_yr
+        if yr_for_dcf in dcf_annual and dcf_annual[yr_for_dcf] is not None:
+            dcf_vals.append(dcf_annual[yr_for_dcf])
+        else:
+            dcf_vals.append(None)
+
+    # ── 8. 统计：各方法偏离度 ──
+    def calc_deviation(method_vals, price_vals=avg_close):
+        """计算估值与实际价格的中位偏离"""
+        diffs = []
+        for i in range(n):
+            if method_vals[i] is not None and price_vals[i] > 0:
+                diffs.append((method_vals[i] - price_vals[i]) / price_vals[i] * 100)
+        if not diffs:
+            return 0, 0, 0
+        return (np.median(diffs),  # 中位偏离（正=估值高于价格=低估）
+                np.percentile(diffs, 25),
+                np.percentile(diffs, 75))
+
+    pe15_vals = pe_data[15]
+    pb3_vals = pb_data[3.0]
+
+    pe_dev_med, pe_dev_q1, pe_dev_q3 = calc_deviation(pe15_vals)
+    pb_dev_med, pb_dev_q1, pb_dev_q3 = calc_deviation(pb3_vals)
+    dcf_dev_med, dcf_dev_q1, dcf_dev_q3 = calc_deviation(dcf_vals)
+
+    # 当前偏离
+    current_pe15_val = cycle_eps_vals[-1] * 15 if cycle_eps_vals[-1] and cycle_eps_vals[-1] > 0 else None
+    current_pb3_val = bps_vals[-1] * 3.0 if pd.notna(bps_vals[-1]) and bps_vals[-1] > 0 else None
+    current_dev_pe = ((current_pe15_val - CURRENT_PRICE) / CURRENT_PRICE * 100) if current_pe15_val else None
+    current_dev_pb = ((current_pb3_val - CURRENT_PRICE) / CURRENT_PRICE * 100) if current_pb3_val else None
+
+    # ── 9. 绘图：三面板 ──
+    fig = make_subplots(
+        rows=3, cols=1,
+        subplot_titles=(
+            f"PE法：滚动8Y周期EPS × 12~28× vs 实际季均价{mode_note}",
+            f"PB法：BPS × 2.0~5.0× vs 实际季均价{mode_note}",
+            "估值偏离度（%）：各方法估值 vs 实际股价"
+        ),
+        vertical_spacing=0.10,
+        row_heights=[0.38, 0.38, 0.24],
+    )
+
+    # ── Panel 1: PE + DCF ──
+    # PE估值区间带（12-28×填充）
+    pe_lower = pe_data[12]
+    pe_upper = pe_data[28]
+    fig.add_trace(go.Scatter(
+        x=list(range(n)) + list(range(n - 1, -1, -1)),
+        y=pe_lower + [pe_upper[i] if pe_upper[i] is not None else pe_lower[n-1-i]
+                       for i in range(n - 1, -1, -1)],
+        fill="toself", fillcolor="rgba(39,174,96,0.08)",
+        line=dict(color="rgba(255,255,255,0)", width=0),
+        name="PE 12-28× 估值区间", hoverinfo="skip", showlegend=True,
+    ), row=1, col=1)
+
+    # PE 15× 核心线
+    fig.add_trace(go.Scatter(
+        x=list(range(n)), y=pe_data[15], mode="lines",
+        line=dict(color=pe_colors[15], width=1.8, dash="dash"),
+        name="PE 15×（保守）", legendgroup="pe",
+    ), row=1, col=1)
+
+    # PE 22× 核心线
+    fig.add_trace(go.Scatter(
+        x=list(range(n)), y=pe_data[22], mode="lines",
+        line=dict(color=pe_colors[22], width=1.8, dash="dash"),
+        name="PE 22×（乐观）", legendgroup="pe",
+    ), row=1, col=1)
+
+    # DCF 估值线
+    fig.add_trace(go.Scatter(
+        x=list(range(n)), y=dcf_vals, mode="lines+markers",
+        line=dict(color=C["purple"], width=2.0),
+        marker=dict(size=4, color=C["purple"]),
+        name="DCF（永续年金简化）", legendgroup="pe",
+    ), row=1, col=1)
+
+    # 实际股价
+    fig.add_trace(go.Scatter(
+        x=list(range(n)), y=avg_close, mode="lines",
+        line=dict(color=C["dark"], width=2.5),
+        name="实际季均价", legendgroup="pe",
+    ), row=1, col=1)
+
+    # ── Panel 2: PB ──
+    pb_lower = pb_data[2.0]
+    pb_upper = pb_data[5.0]
+    fig.add_trace(go.Scatter(
+        x=list(range(n)) + list(range(n - 1, -1, -1)),
+        y=pb_lower + [pb_upper[i] if pb_upper[i] is not None else pb_lower[n-1-i]
+                       for i in range(n - 1, -1, -1)],
+        fill="toself", fillcolor="rgba(26,188,156,0.08)",
+        line=dict(color="rgba(255,255,255,0)", width=0),
+        name="PB 2-5× 估值区间", hoverinfo="skip", showlegend=True,
+    ), row=2, col=1)
+
+    fig.add_trace(go.Scatter(
+        x=list(range(n)), y=pb_data[3.0], mode="lines",
+        line=dict(color=pb_colors[3.0], width=1.8, dash="dash"),
+        name="PB 3.0×（中枢）", legendgroup="pb",
+    ), row=2, col=1)
+
+    fig.add_trace(go.Scatter(
+        x=list(range(n)), y=pb_data[4.0], mode="lines",
+        line=dict(color=pb_colors[4.0], width=1.8, dash="dash"),
+        name="PB 4.0×（乐观）", legendgroup="pb",
+    ), row=2, col=1)
+
+    fig.add_trace(go.Scatter(
+        x=list(range(n)), y=avg_close, mode="lines",
+        line=dict(color=C["dark"], width=2.5),
+        name="实际季均价", legendgroup="pb", showlegend=False,
+    ), row=2, col=1)
+
+    # ── Panel 3: 偏离度 ──
+    pe15_dev_vals = []
+    pb3_dev_vals = []
+    dcf_dev_vals = []
+    for i in range(n):
+        if pe15_vals[i] is not None and avg_close[i] > 0:
+            pe15_dev_vals.append((pe15_vals[i] - avg_close[i]) / avg_close[i] * 100)
+        else:
+            pe15_dev_vals.append(None)
+        if pb3_vals[i] is not None and avg_close[i] > 0:
+            pb3_dev_vals.append((pb3_vals[i] - avg_close[i]) / avg_close[i] * 100)
+        else:
+            pb3_dev_vals.append(None)
+        if dcf_vals[i] is not None and avg_close[i] > 0:
+            dcf_dev_vals.append((dcf_vals[i] - avg_close[i]) / avg_close[i] * 100)
+        else:
+            dcf_dev_vals.append(None)
+
+    fig.add_trace(go.Scatter(
+        x=list(range(n)), y=pe15_dev_vals, mode="lines",
+        line=dict(color=pe_colors[15], width=1.8),
+        name="PE 15× 偏离度", legendgroup="dev",
+    ), row=3, col=1)
+
+    fig.add_trace(go.Scatter(
+        x=list(range(n)), y=pb3_dev_vals, mode="lines",
+        line=dict(color=pb_colors[3.0], width=1.8),
+        name="PB 3.0× 偏离度", legendgroup="dev",
+    ), row=3, col=1)
+
+    fig.add_trace(go.Scatter(
+        x=list(range(n)), y=dcf_dev_vals, mode="lines",
+        line=dict(color=C["purple"], width=1.8),
+        name="DCF 偏离度", legendgroup="dev",
+    ), row=3, col=1)
+
+    # 零线
+    fig.add_hline(y=0, line_dash="solid", line_color="#999", line_width=1,
+                  row=3, col=1)
+    # ±20% 参考线
+    fig.add_hline(y=20, line_dash="dot", line_color="#bbb", line_width=0.8,
+                  row=3, col=1)
+    fig.add_hline(y=-20, line_dash="dot", line_color="#bbb", line_width=0.8,
+                  row=3, col=1)
+
+    # ── X轴刻度 ──
+    tick_indices, tick_labels = [], []
+    for i, lbl in enumerate(q_labels):
+        if lbl.endswith("Q1") or i == n - 1:
+            tick_indices.append(i)
+            tick_labels.append(lbl)
+
+    for row_idx in [1, 2, 3]:
+        fig.update_xaxes(
+            tickmode="array", tickvals=tick_indices, ticktext=tick_labels,
+            range=[-0.5, n - 0.5], row=row_idx, col=1,
+        )
+
+    fig.update_yaxes(title="股价（元）", row=1, col=1)
+    fig.update_yaxes(title="股价（元）", row=2, col=1)
+    fig.update_yaxes(title="偏离度（%）", row=3, col=1,
+                     range=[-50, 100])
+
+    # ── 统计注释 ──
+    stats_text = (
+        f"<b>历史偏离统计（中位数）</b><br>"
+        f"PE 15×: {pe_dev_med:+.0f}% （估值 vs 股价）<br>"
+        f"PB 3.0×: {pb_dev_med:+.0f}%<br>"
+        f"DCF简化: {dcf_dev_med:+.0f}%<br>"
+        f"<br><b>当前偏离</b><br>"
+        f"PE 15×: {current_dev_pe:+.0f}%（"
+        + ("低估" if current_dev_pe and current_dev_pe > 0 else "高估") + "）<br>"
+        f"PB 3.0×: {current_dev_pb:+.0f}%（"
+        + ("低估" if current_dev_pb and current_dev_pb > 0 else "高估") + "）"
+    )
+
+    fig.add_annotation(
+        x=0.99, y=0.95, xref="paper", yref="paper",
+        text=stats_text, showarrow=False,
+        font=dict(size=10, color="#333", family="Consolas, monospace"),
+        align="left", bgcolor="rgba(255,255,255,0.85)",
+        bordercolor="#ddd", borderwidth=1, borderpad=8,
+    )
+
+    fig.update_layout(
+        template=PLOTLY_TEMPLATE,
+        font=dict(family="Microsoft YaHei, PingFang SC, sans-serif", size=11, color="#1a1a1a"),
+        title=dict(
+            text=f"历史估值方法验证 — 只使用各时点可得信息的回测（2018Q1–{q_labels[-1]}）",
+            x=0.02, y=0.995, font=dict(size=15, color="#1a1a1a"),
+        ),
+        height=950,
+        hovermode="x unified",
+        legend=dict(orientation="h", yanchor="bottom", y=1.02, font=dict(size=10)),
+        margin=dict(l=55, r=150, t=80, b=55),
+    )
+
+    return fig
+
+
 # ==================== HTML 构建 ====================
 
 def build_dcf_detail():
@@ -2148,10 +2515,10 @@ HTML = """<!DOCTYPE html>
     {pe_band_ch4}
     <h3>3e. 股价走势与PB估值</h3>
     {price_pe_ch4b}
-    <p style="font-size:12px;color:#888">PB（市净率）= 季末收盘价 ÷ 季末每股净资产（BPS）。BPS始终为正，不受周期盈亏影响，走势与股价天然协调。三个阶段底色标注了牧原从"成长股溢价"到"成熟周期股定价"的范式转换。</p>
+    <p style="font-size:12px;color:#888">PB（市净率）= 季度均价 ÷ 季末每股净资产（BPS）。用季均价而非季末单点收盘价，反映季度内"典型"估值水平，避免单日波动干扰。BPS始终为正，不受周期盈亏影响。三个阶段底色标注了牧原从"成长股溢价"到"成熟周期股定价"的范式转换。</p>
     <h3>3f. 股价走势与当期PE估值</h3>
     {price_cycle_pe_ch4c}
-    <p style="font-size:12px;color:#888">当期PE = 季末收盘价 ÷（单季EPS × 4），即用当前季度盈利年化作为估值基础。比TTM更敏锐——单季利润变化立刻反映在PE上，不会被过去几个季度平滑掉。右轴使用<b>对数刻度</b>，天然压缩极端值。亏损季度自动断开。金色虚线为当前周期均值PE（{current_cycle_pe_val:.1f}× = 股价 ÷ 8年均EPS {avg8_eps:.2f}元）作为参考锚。</p>
+    <p style="font-size:12px;color:#888">当期PE = 季度均价 ÷（单季EPS × 4），即用当前季度盈利年化作为估值基础，反映季度内"典型"定价水平。比TTM更敏锐——单季利润变化立刻反映在PE上，不会被过去几个季度平滑掉。右轴使用<b>对数刻度</b>，天然压缩极端值。亏损季度自动断开。金色虚线为当前周期均值PE（{current_cycle_pe_val:.1f}× = 股价 ÷ 8年均EPS {avg8_eps:.2f}元）作为参考锚。</p>
     <div class="box-green">
       <p style="margin:0"><b>相对价值法结论：</b>牧原在同行中<b>综合排名第1</b>（成本最低、ROE最高、规模最大）。
       同行周期PE参考：温氏~28×、神农~36×（新希望/正邦周期EPS≤0，PE无意义）。
@@ -2254,6 +2621,12 @@ HTML = """<!DOCTYPE html>
     <h3>7e. 历史低谷验证：周期PE下限校准</h3>
     <p class="source">来源：历年财务数据 + 历史股价高低点（同花顺/东方财富前复权）——用实际市场定价验证模型PE范围是否合理</p>
     {trough_chart}
+
+    <h3>7f. 历史估值方法验证：全方法回测</h3>
+    <p class="source">来源：各估值方法在历史每个时点、只使用"当时可得"数据的回测——PE法（滚动8Y周期EPS）、PB法（BPS）、DCF法（简化永续年金）</p>
+    {hist_validation_ch11}
+    <p style="font-size:12px;color:#888">三面板自上而下：① PE法回测（12-28×估值区间 vs 实价）+ DCF简化线 ② PB法回测（2-5×估值区间 vs 实价）③ 偏离度（估值/股价-1，正值=估值高于股价=低估）。<b>核心理念</b>：如果一种估值方法在历史上始终高于或始终低于股价，说明该方法需要校准——真正有效的估值方法，股价应该在估值区间内上下穿越。右上角统计框显示各方法历史中位偏离和当前偏离。</p>
+
     <div class="box-red">
       <p style="margin:0">
         <b>关键发现：2018年非瘟后，牧原发生了结构性重估——低谷周期PE从4×跳升至20-25×。</b><br><br>
@@ -2457,6 +2830,7 @@ def main():
         ("peak_chart", ch8_cycle_peak),
         ("futures_chart", ch9_futures_curve),
         ("trough_chart", ch10_trough_pe),
+        ("hist_validation_ch11", ch11_historical_validation),
     ]
 
     chart_html = {}
@@ -2603,6 +2977,7 @@ def main():
         futures_scenario_label=futures_scenario,
         # 历史低谷验证
         trough_chart=chart_html.get("trough_chart", ""),
+        hist_validation_ch11=chart_html.get("hist_validation_ch11", ""),
         current_cycle_pe=current_cycle_pe,
         trough_floor=trough_pe_floor,
         vs_trough_floor=f"低于" if current_cycle_pe < trough_pe_floor else "高于",
