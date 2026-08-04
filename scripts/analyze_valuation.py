@@ -2283,10 +2283,20 @@ def ch11_historical_validation():
             range=[-0.5, n - 0.5], row=row_idx, col=1,
         )
 
+    # ── 计算偏离度实际范围（动态设置Y轴）──
+    all_dev = [v for v in pe15_dev_vals + pb3_dev_vals + dcf_dev_vals
+               if v is not None and not (isinstance(v, float) and np.isnan(v))]
+    dev_min = min(all_dev) if all_dev else -100
+    dev_max = max(all_dev) if all_dev else 200
+    # 加15% padding，且至少延伸到±20%参考线
+    dev_pad = (dev_max - dev_min) * 0.15
+    dev_lo = min(dev_min - dev_pad, -25)
+    dev_hi = max(dev_max + dev_pad, 25)
+
     fig.update_yaxes(title="股价（元）", row=1, col=1)
     fig.update_yaxes(title="股价（元）", row=2, col=1)
     fig.update_yaxes(title="偏离度（%）", row=3, col=1,
-                     range=[-50, 100])
+                     range=[dev_lo, dev_hi])
 
     # ── 统计注释 ──
     stats_text = (
