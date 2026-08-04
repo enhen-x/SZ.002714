@@ -1126,8 +1126,14 @@ def ch4_pe_band():
     )
     return fig
 
-def ch4b_price_pe_trend():
-    """股价走势与PE双轴图 — 季度粒度（优先使用真实日线，回退至年度插值）"""
+def ch4b_price_pb_trend():
+    """股价走势与PB双轴图 — 季度粒度（优先使用真实日线，回退至年度插值）
+
+    PB（市净率）比 PE 更适合与股价放在一起分析周期股：
+    - BPS 始终为正，不会像 EPS 那样趋近零导致估值倍数爆炸
+    - PB 与股价天然正相关，两条线走势协调
+    - Graham & Dodd 推荐对周期股使用 PB 作为辅助估值锚
+    """
     import urllib.request, json, ssl, os
 
     # ── 1. 尝试从本地缓存加载日线数据 ──
@@ -1166,13 +1172,12 @@ def ch4b_price_pe_trend():
             print(f"  ⚠ 无法获取日线数据({e})，回退至年度插值模式")
 
     # ── 2. 构建季度数据 ──
-    # 2a. 从季度财报加载 EPS
+    # 2a. 从季度财报加载 BPS（每股净资产）—— 比 TTM EPS 稳定得多
     df_qf = pd.read_csv(ROOT / "data" / "主要财务指标_按单季度.csv", dtype=str)
     df_qf["REPORT_DATE"] = pd.to_datetime(df_qf["REPORT_DATE"])
-    df_qf["EPSJB"] = pd.to_numeric(df_qf["EPSJB"], errors="coerce")
+    df_qf["BPS"] = pd.to_numeric(df_qf["BPS"], errors="coerce")
     df_qf = df_qf.sort_values("REPORT_DATE")
     df_qf["quarter"] = df_qf["REPORT_DATE"].dt.to_period("Q")
-    df_qf["eps_ttm"] = df_qf["EPSJB"].rolling(4, min_periods=4).sum()
 
     # 2b. 季度价格
     if df_daily is not None:
@@ -1181,8 +1186,8 @@ def ch4b_price_pe_trend():
         qtr_price = df_daily.groupby("quarter").agg(
             close=("close", "last"), high=("high", "max"), low=("low", "min")
         ).reset_index()
-        # Merge with EPS
-        qtr = qtr_price.merge(df_qf[["quarter", "eps_ttm", "EPSJB"]], on="quarter", how="left")
+        # Merge with BPS
+        qtr = qtr_price.merge(df_qf[["quarter", "BPS"]], on="quarter", how="left")
     else:
         # 回退：从年度高低点估算季度收盘价（年中值近似）
         qtr_list = []
@@ -1193,32 +1198,25 @@ def ch4b_price_pe_trend():
                 q_period = pd.Period(q_str, freq="Q")
                 qtr_list.append({"quarter": q_period, "close": mid, "high": sh, "low": sl})
         qtr = pd.DataFrame(qtr_list)
-        qtr = qtr.merge(df_qf[["quarter", "eps_ttm", "EPSJB"]], on="quarter", how="left")
+        qtr = qtr.merge(df_qf[["quarter", "BPS"]], on="quarter", how="left")
 
-    # 过滤：从2018Q1开始（PE数据可用性），且至少要有eps_ttm
-    qtr = qtr[(qtr["quarter"] >= pd.Period("2018Q1", "Q")) & qtr["eps_ttm"].notna()].reset_index(drop=True)
+    # 过滤：从2018Q1开始，且至少要有BPS
+    qtr = qtr[(qtr["quarter"] >= pd.Period("2018Q1", "Q")) & qtr["BPS"].notna()].reset_index(drop=True)
 
-    # 2c. 计算季度PE
-    qtr["pe"] = qtr["close"] / qtr["eps_ttm"]
-    qtr["pe"] = qtr["pe"].clip(0, 80)  # 截断极端值
-    qtr["is_loss"] = qtr["eps_ttm"] <= 0
+    # 2c. 计算季度 PB
+    qtr["pb"] = qtr["close"] / qtr["BPS"]
     qtr["quarter_label"] = qtr["quarter"].astype(str)
 
     # ── 3. 当前实时数据点 ──
-    latest_eps = qtr["eps_ttm"].iloc[-1] if len(qtr) > 0 else AVG8_EPS
-    current_pe_real = CURRENT_PRICE / latest_eps if latest_eps > 0 else None
+    latest_bps = qtr["BPS"].iloc[-1] if len(qtr) > 0 else None
+    current_pb_real = CURRENT_PRICE / latest_bps if latest_bps and latest_bps > 0 else None
 
     # ── 4. 绘图 ──
     q_labels = qtr["quarter_label"].tolist()
     close_vals = qtr["close"].tolist()
     high_vals = qtr["high"].tolist()
     low_vals = qtr["low"].tolist()
-    pe_raw = qtr["pe"].tolist()
-    is_loss = qtr["is_loss"].tolist()
-
-    # PE 折线：亏损季度断开
-    pe_plot = [pe_raw[i] if not is_loss[i] else None for i in range(len(pe_raw))]
-    pe_years_plot = list(range(len(pe_plot)))
+    pb_raw = qtr["pb"].tolist()
 
     fig = make_subplots(specs=[[{"secondary_y": True}]])
 
@@ -1235,7 +1233,7 @@ def ch4b_price_pe_trend():
     hover_price = [f"{q_labels[i]}<br>收盘: {close_vals[i]:.1f}元<br>最高: {high_vals[i]:.1f}元 / 最低: {low_vals[i]:.1f}元"
                    for i in range(len(qtr))]
     fig.add_trace(go.Scatter(
-        x=pe_years_plot, y=close_vals, mode="lines+markers",
+        x=list(range(len(qtr))), y=close_vals, mode="lines+markers",
         line=dict(color=C["midblue"], width=2.2),
         marker=dict(size=6, color=C["midblue"], line=dict(color="white", width=1.5)),
         name="季度收盘价", text=hover_price, hoverinfo="text",
@@ -1249,28 +1247,25 @@ def ch4b_price_pe_trend():
                        text=f"当前 {CURRENT_PRICE}元",
                        showarrow=False, font=dict(size=10, color=C["midblue"]), xanchor="right")
 
-    # PE 折线（右轴）
-    hover_pe = []
+    # PB 折线（右轴）—— 完整连续，不需要断开
+    hover_pb = []
     for i in range(len(qtr)):
-        if is_loss[i]:
-            hover_pe.append(f"{q_labels[i]}<br>TTM EPS = {qtr['eps_ttm'].iloc[i]:.2f}元<br>亏损 · PE无意义")
-        else:
-            hover_pe.append(f"{q_labels[i]}<br>TTM PE = {pe_raw[i]:.1f}×<br>TTM EPS = {qtr['eps_ttm'].iloc[i]:.2f}元<br>收盘 = {close_vals[i]:.1f}元")
+        hover_pb.append(f"{q_labels[i]}<br>PB = {pb_raw[i]:.2f}×<br>收盘 = {close_vals[i]:.1f}元<br>BPS = {qtr['BPS'].iloc[i]:.2f}元")
     fig.add_trace(go.Scatter(
-        x=pe_years_plot, y=pe_plot, mode="lines+markers",
+        x=list(range(len(qtr))), y=pb_raw, mode="lines+markers",
         line=dict(color=C["red"], width=2.2),
         marker=dict(size=6, color=C["red"], line=dict(color="white", width=1.5)),
-        name="季度末PE(TTM)", text=hover_pe, hoverinfo="text",
-        connectgaps=False,
+        name="季度末PB（市净率）", text=hover_pb, hoverinfo="text",
+        connectgaps=True,
     ), secondary_y=True)
 
-    # 当前PE标注
-    if current_pe_real and current_pe_real < 80:
+    # 当前PB标注
+    if current_pb_real:
         fig.add_shape(type="line", x0=x_l, x1=x_r,
-                      y0=current_pe_real, y1=current_pe_real,
+                      y0=current_pb_real, y1=current_pb_real,
                       line=dict(color=C["red"], width=1.5, dash="dot"), opacity=0.45)
-        fig.add_annotation(x=len(qtr)-1, y=current_pe_real + 2.5,
-                           text=f"当前PE {current_pe_real:.1f}×",
+        fig.add_annotation(x=len(qtr)-1, y=current_pb_real + (max(pb_raw) * 0.05),
+                           text=f"当前PB {current_pb_real:.2f}×",
                            showarrow=False, font=dict(size=10, color=C["red"]), xanchor="right")
 
     # X轴: 每4个季度标一个年份
@@ -1285,6 +1280,11 @@ def ch4b_price_pe_trend():
         range=[x_l, x_r + 0.5],
         showgrid=True, gridcolor="#f0f0f0",
     )
+
+    # PB 区间上下界（留白 10%）
+    pb_ceil = max(pb_raw) * 1.10
+    pb_floor = 0
+
     fig.update_yaxes(
         title=dict(text="股价（元）", font=dict(size=12, color=C["midblue"])),
         range=[0, max(high_vals) * 1.15],
@@ -1293,16 +1293,16 @@ def ch4b_price_pe_trend():
         secondary_y=False,
     )
     fig.update_yaxes(
-        title=dict(text="PE 估值倍数（倍）", font=dict(size=12, color=C["red"])),
-        range=[0, 80], dtick=10,
+        title=dict(text="PB 市净率（倍）", font=dict(size=12, color=C["red"])),
+        range=[pb_floor, pb_ceil],
         tickfont=dict(size=11, color=C["red"]),
         secondary_y=True,
     )
-    mode_note = "（数据来源: 日线聚合）" if df_daily is not None else "（数据来源: 年度高低点插值，季度EPS来自财报）"
+    mode_note = "（日线聚合）" if df_daily is not None else "（年度高低点插值，季度BPS来自财报）"
     fig.update_layout(
         template=PLOTLY_TEMPLATE,
         font=dict(family="Microsoft YaHei, PingFang SC, sans-serif", size=12, color="#1a1a1a"),
-        title=dict(text=f"股价走势与PE估值 — 季度粒度（2018Q1-{q_labels[-1]}）{mode_note}",
+        title=dict(text=f"股价走势与PB估值 — 季度粒度（2018Q1-{q_labels[-1]}）{mode_note}",
                    x=0.02, y=0.98, font=dict(size=15, color="#1a1a1a")),
         height=480,
         legend=dict(orientation="h", yanchor="bottom", y=1.08, font=dict(size=11)),
@@ -1862,9 +1862,9 @@ HTML = """<!DOCTYPE html>
     {peer_detail}
     <h3>3d. PE Band 历史区间</h3>
     {pe_band_ch4}
-    <h3>3e. 股价走势与PE估值</h3>
+    <h3>3e. 股价走势与PB估值</h3>
     {price_pe_ch4b}
-    <p style="font-size:12px;color:#888">季度股价取季末收盘价，灰色带为季度内最高/最低价区间。PE(TTM) = 季末收盘价 ÷ 过去四个季度EPS之和。亏损季度（TTM EPS≤0）PE折线自动断开。当前数据截至2026Q1财报 + 最新股价。每日日线数据自动缓存至 data/牧原_日线股价.csv（网络可用时自动更新）。</p>
+    <p style="font-size:12px;color:#888">季度股价取季末收盘价，灰色带为季度内最高/最低价区间。PB（市净率）= 季末收盘价 ÷ 季末每股净资产（BPS）。选择PB而非PE是因为周期股TTM EPS在周期底部趋近于零，PE会极端膨胀至无意义值（如175×），而BPS始终为正，PB走势与股价天然协调，更适合双轴对比分析。当前数据截至2026Q1财报 + 最新股价。</p>
     <div class="box-green">
       <p style="margin:0"><b>相对价值法结论：</b>牧原在同行中<b>综合排名第1</b>（成本最低、ROE最高、规模最大）。
       同行周期PE参考：温氏~28×、神农~36×（新希望/正邦周期EPS≤0，PE无意义）。
@@ -2162,7 +2162,7 @@ def main():
         ("dcf_ch2", ch2_wacc_sensitivity),
         ("peer_ch3", ch3_peer_comparison),
         ("pe_band_ch4", ch4_pe_band),
-        ("price_pe_ch4b", ch4b_price_pe_trend),
+        ("price_pe_ch4b", ch4b_price_pb_trend),
         ("bridge_ch5", ch5_valuation_bridge),
         ("safety_ch6", ch6_safety_margin),
         ("summary_table", ch7_summary_table),
