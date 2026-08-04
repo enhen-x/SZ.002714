@@ -1294,7 +1294,7 @@ def ch4b_price_pe_trend():
     )
     fig.update_yaxes(
         title=dict(text="PE 估值倍数（倍）", font=dict(size=12, color=C["red"])),
-        range=[0, 55], dtick=10,
+        range=[0, 80], dtick=10,
         tickfont=dict(size=11, color=C["red"]),
         secondary_y=True,
     )
