@@ -1268,6 +1268,31 @@ def ch4b_price_pb_trend():
                            text=f"当前PB {current_pb_real:.2f}×",
                            showarrow=False, font=dict(size=10, color=C["red"]), xanchor="right")
 
+    # ── 周期均值PE折线（y3 右轴偏移）—— 分母固定为8年均EPS，熨平周期波动 ──
+    cycle_pe_vals = [close_vals[i] / AVG8_EPS for i in range(len(qtr))]
+    hover_cycle_pe = []
+    for i in range(len(qtr)):
+        hover_cycle_pe.append(
+            f"{q_labels[i]}<br>周期均值PE = {cycle_pe_vals[i]:.1f}×<br>"
+            f"收盘 {close_vals[i]:.1f}元 ÷ 8年均EPS {AVG8_EPS:.2f}元"
+        )
+    fig.add_trace(go.Scatter(
+        x=list(range(len(qtr))), y=cycle_pe_vals,
+        mode="lines",
+        line=dict(color=C["gold"], width=2.2, dash="dash"),
+        name="周期均值PE（股价÷8年均EPS 2.04）",
+        text=hover_cycle_pe, hoverinfo="text",
+        connectgaps=True,
+        yaxis="y3",
+    ))
+
+    # 当前周期PE标注
+    current_cycle_pe = CURRENT_PRICE / AVG8_EPS
+    fig.add_annotation(x=len(qtr)-1, y=current_cycle_pe + 2,
+                       text=f"当前周期PE {current_cycle_pe:.1f}×",
+                       showarrow=False,
+                       font=dict(size=10, color=C["gold"]), xanchor="right")
+
     # ── 5. 发展阶段底色标注 ──
     # 找到各阶段边界季度索引
     def find_q_idx(pattern):
@@ -1291,8 +1316,6 @@ def ch4b_price_pb_trend():
          "line_color": "rgba(26,188,156,0.30)",
          "label": "成熟价值期", "sub": "股价 ≈ PB × BPS"},
     ]
-
-    pb_ceil = max(pb_raw) * 1.10  # 提前计算，供阶段标注用
 
     for ph in phases:
         i0 = find_q_idx(ph["start_q"])
@@ -1329,6 +1352,7 @@ def ch4b_price_pb_trend():
     # PB 区间上下界（留白 10%）
     pb_ceil = max(pb_raw) * 1.10
     pb_floor = 0
+    cycle_pe_ceil = max(cycle_pe_vals) * 1.08
 
     fig.update_yaxes(
         title=dict(text="股价（元）", font=dict(size=12, color=C["midblue"])),
@@ -1342,6 +1366,18 @@ def ch4b_price_pb_trend():
         range=[pb_floor, pb_ceil],
         tickfont=dict(size=11, color=C["red"]),
         secondary_y=True,
+    )
+    # y3: 周期均值PE（右轴偏移，金色虚线刻度）
+    fig.update_layout(
+        yaxis3=dict(
+            title=dict(text="周期均值PE（倍）", font=dict(size=12, color=C["gold"])),
+            range=[0, cycle_pe_ceil],
+            tickfont=dict(size=10, color=C["gold"]),
+            overlaying="y2",
+            side="right",
+            position=0.88,
+            showgrid=False,
+        ),
     )
     mode_note = "（日线聚合）" if df_daily is not None else "（年度高低点插值，季度BPS来自财报）"
     fig.update_layout(
