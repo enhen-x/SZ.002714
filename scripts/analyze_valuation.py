@@ -1268,6 +1268,51 @@ def ch4b_price_pb_trend():
                            text=f"当前PB {current_pb_real:.2f}×",
                            showarrow=False, font=dict(size=10, color=C["red"]), xanchor="right")
 
+    # ── 5. 发展阶段底色标注 ──
+    # 找到各阶段边界季度索引
+    def find_q_idx(pattern):
+        """在 q_labels 中查找匹配的季度，返回索引"""
+        for i, lbl in enumerate(q_labels):
+            if lbl == pattern:
+                return i
+        return None
+
+    phases = [
+        {"start_q": "2018Q1", "end_q": "2020Q4",
+         "color": "rgba(243,156,18,0.08)",    # 暖金 — 扩张溢价
+         "line_color": "rgba(243,156,18,0.35)",
+         "label": "扩张溢价期", "sub": "PB 5–12× 成长股估值"},
+        {"start_q": "2021Q1", "end_q": "2022Q4",
+         "color": "rgba(127,140,141,0.06)",    # 灰 — 去溢价过渡
+         "line_color": "rgba(127,140,141,0.30)",
+         "label": "去溢价期", "sub": "猪价崩盘 · PB 回落"},
+        {"start_q": "2023Q1", "end_q": q_labels[-1],
+         "color": "rgba(26,188,156,0.07)",     # 青绿 — 成熟价值
+         "line_color": "rgba(26,188,156,0.30)",
+         "label": "成熟价值期", "sub": "股价 ≈ PB × BPS"},
+    ]
+
+    pb_ceil = max(pb_raw) * 1.10  # 提前计算，供阶段标注用
+
+    for ph in phases:
+        i0 = find_q_idx(ph["start_q"])
+        i1 = find_q_idx(ph["end_q"])
+        if i0 is None or i1 is None:
+            continue
+        # 底色矩形（跨整个图表高度）
+        fig.add_shape(type="rect", x0=i0 - 0.5, x1=i1 + 0.5,
+                      y0=0, y1=1, yref="paper",
+                      fillcolor=ph["color"],
+                      line=dict(color=ph["line_color"], width=1),
+                      layer="below")
+        # 阶段标签（置于图表顶部）
+        mid_x = (i0 + i1) / 2
+        fig.add_annotation(x=mid_x, y=1.01, yref="paper",
+                          text=f"<b>{ph['label']}</b><br><span style='font-size:10px'>{ph['sub']}</span>",
+                          showarrow=False,
+                          font=dict(size=11, color="#444"),
+                          align="center")
+
     # X轴: 每4个季度标一个年份
     tick_indices, tick_labels = [], []
     for i, lbl in enumerate(q_labels):
