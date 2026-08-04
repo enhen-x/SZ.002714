@@ -1152,7 +1152,7 @@ def ch4b_price_pb_trend():
             url = ("https://push2his.eastmoney.com/api/qt/stock/kline/get"
                    "?secid=0.002714&fields1=f1,f2,f3,f4,f5,f6"
                    "&fields2=f51,f52,f53,f54,f55,f56"
-                   "&klt=101&fqt=1&beg=20170101&end=20260804&lmt=3000")
+                   "&klt=101&fqt=0&beg=20170101&end=20260804&lmt=3000")
             req = urllib.request.Request(url, headers={"User-Agent": "Mozilla/5.0"})
             with urllib.request.urlopen(req, timeout=15) as resp:
                 data = json.loads(resp.read().decode())
@@ -1356,11 +1356,11 @@ def ch4b_price_pb_trend():
 
 
 def ch4c_price_ttm_pe_trend():
-    """股价与TTM PE双轴图 — 对数右轴，反映周期各阶段真实市场估值
+    """股价与当期PE双轴图 — 对数右轴，反映各季度市场估值水平
 
-    使用 TTM PE（股价 ÷ 过去4季度EPS之和）。虽然周期底部EPS趋零时PE会冲高，
-    但对数刻度天然压缩极端值——10×→100×在视觉上等于1×→10×。
-    亏损季度（TTM EPS≤0）自动断开，PE折线反映的是"盈利期"的市场估值变化。
+    当期PE = 股价 ÷ (单季EPS × 4)，即用当前季度盈利年化作为估值分母。
+    比TTM更敏锐——单季利润变化立刻反映在PE上，不会被前几季度平滑掉。
+    对数刻度压缩极端值，亏损季度自动断开。
     """
     import urllib.request, json, ssl, os
 
@@ -1376,7 +1376,7 @@ def ch4c_price_ttm_pe_trend():
             url = ("https://push2his.eastmoney.com/api/qt/stock/kline/get"
                    "?secid=0.002714&fields1=f1,f2,f3,f4,f5,f6"
                    "&fields2=f51,f52,f53,f54,f55,f56"
-                   "&klt=101&fqt=1&beg=20170101&end=20260804&lmt=3000")
+                   "&klt=101&fqt=0&beg=20170101&end=20260804&lmt=3000")
             req = urllib.request.Request(url, headers={"User-Agent": "Mozilla/5.0"})
             with urllib.request.urlopen(req, timeout=15) as resp:
                 data = json.loads(resp.read().decode())
@@ -1392,13 +1392,12 @@ def ch4c_price_ttm_pe_trend():
         except Exception as e:
             print(f"  ⚠ 无法获取日线数据({e})，回退至年度插值模式")
 
-    # ── 2. 季度 TTM EPS ──
+    # ── 2. 季度 EPS（单季年化）──
     df_qf = pd.read_csv(ROOT / "data" / "主要财务指标_按单季度.csv", dtype=str)
     df_qf["REPORT_DATE"] = pd.to_datetime(df_qf["REPORT_DATE"])
     df_qf["EPSJB"] = pd.to_numeric(df_qf["EPSJB"], errors="coerce")
     df_qf = df_qf.sort_values("REPORT_DATE")
     df_qf["quarter"] = df_qf["REPORT_DATE"].dt.to_period("Q")
-    df_qf["eps_ttm"] = df_qf["EPSJB"].rolling(4, min_periods=4).sum()
 
     # ── 3. 季度价格 ──
     if df_daily is not None:
@@ -1406,7 +1405,7 @@ def ch4c_price_ttm_pe_trend():
         qtr_price = df_daily.groupby("quarter").agg(
             close=("close", "last"), high=("high", "max"), low=("low", "min")
         ).reset_index()
-        qtr = qtr_price.merge(df_qf[["quarter", "eps_ttm", "EPSJB"]], on="quarter", how="left")
+        qtr = qtr_price.merge(df_qf[["quarter", "EPSJB"]], on="quarter", how="left")
     else:
         qtr_list = []
         for yr, (sh, sl) in sorted(STOCK_ANNUAL_RANGE.items()):
@@ -1415,30 +1414,30 @@ def ch4c_price_ttm_pe_trend():
                 qtr_list.append({"quarter": pd.Period(f"{yr}Q{q}", freq="Q"),
                                  "close": mid, "high": sh, "low": sl})
         qtr = pd.DataFrame(qtr_list)
-        qtr = qtr.merge(df_qf[["quarter", "eps_ttm", "EPSJB"]], on="quarter", how="left")
+        qtr = qtr.merge(df_qf[["quarter", "EPSJB"]], on="quarter", how="left")
 
-    # 过滤：2018Q1起，需要有TTM EPS
+    # 过滤：2018Q1起，需要有EPS
     qtr = qtr[(qtr["quarter"] >= pd.Period("2018Q1", "Q"))
-              & qtr["eps_ttm"].notna()].reset_index(drop=True)
+              & qtr["EPSJB"].notna()].reset_index(drop=True)
 
     q_labels = qtr["quarter"].astype(str).tolist()
     close_vals = qtr["close"].tolist()
     high_vals = qtr["high"].tolist()
     low_vals = qtr["low"].tolist()
-    eps_ttm_vals = qtr["eps_ttm"].tolist()
-    is_loss = (qtr["eps_ttm"] <= 0).tolist()
+    eps_q_vals = qtr["EPSJB"].tolist()
+    is_loss = (qtr["EPSJB"] <= 0).tolist()
 
-    # ── 4. TTM PE（亏损时无意义，断开）──
-    ttm_pe_vals = []
+    # ── 4. 当期PE = 股价 ÷ (单季EPS × 4)（亏损时断开）──
+    pe_q_vals = []
     for i in range(len(qtr)):
-        if is_loss[i] or eps_ttm_vals[i] <= 0:
-            ttm_pe_vals.append(None)
+        if is_loss[i] or eps_q_vals[i] <= 0:
+            pe_q_vals.append(None)
         else:
-            ttm_pe_vals.append(close_vals[i] / eps_ttm_vals[i])
+            pe_q_vals.append(close_vals[i] / (eps_q_vals[i] * 4))
 
-    # 当前TTM PE
-    latest_eps_ttm = eps_ttm_vals[-1] if eps_ttm_vals else None
-    current_ttm_pe = CURRENT_PRICE / latest_eps_ttm if latest_eps_ttm and latest_eps_ttm > 0 else None
+    # 当前当期PE
+    latest_eps_q = eps_q_vals[-1] if eps_q_vals else None
+    current_pe_q = CURRENT_PRICE / (latest_eps_q * 4) if latest_eps_q and latest_eps_q > 0 else None
 
     # ── 5. 绘图 ──
     fig = make_subplots(specs=[[{"secondary_y": True}]])
@@ -1474,30 +1473,30 @@ def ch4c_price_ttm_pe_trend():
     hover_pe = []
     for i in range(len(qtr)):
         if is_loss[i]:
-            hover_pe.append(f"{q_labels[i]}<br>TTM EPS = {eps_ttm_vals[i]:.2f}元<br>亏损 · PE无意义")
+            hover_pe.append(f"{q_labels[i]}<br>单季EPS = {eps_q_vals[i]:.2f}元<br>亏损 · PE无意义")
         else:
-            hover_pe.append(f"{q_labels[i]}<br>TTM PE = {ttm_pe_vals[i]:.1f}×<br>"
-                           f"TTM EPS = {eps_ttm_vals[i]:.2f}元 · 收盘 = {close_vals[i]:.1f}元")
+            hover_pe.append(f"{q_labels[i]}<br>当期PE = {pe_q_vals[i]:.1f}×<br>"
+                           f"单季EPS = {eps_q_vals[i]:.2f}元 · 收盘 = {close_vals[i]:.1f}元")
     fig.add_trace(go.Scatter(
-        x=list(range(len(qtr))), y=ttm_pe_vals, mode="lines+markers",
+        x=list(range(len(qtr))), y=pe_q_vals, mode="lines+markers",
         line=dict(color=C["teal"], width=2.2),
         marker=dict(size=6, color=C["teal"], line=dict(color="white", width=1.5)),
-        name="TTM PE（对数刻度）", text=hover_pe, hoverinfo="text",
+        name="当期PE（对数刻度）", text=hover_pe, hoverinfo="text",
         connectgaps=False,
     ), secondary_y=True)
 
     # 有效PE范围（排除None）
-    valid_pe = [p for p in ttm_pe_vals if p is not None]
+    valid_pe = [p for p in pe_q_vals if p is not None]
     pe_min = min(valid_pe) if valid_pe else 2
     pe_max = max(valid_pe) if valid_pe else 60
 
-    # 当前TTM PE标注
-    if current_ttm_pe:
+    # 当前当期PE标注
+    if current_pe_q:
         fig.add_shape(type="line", x0=x_l, x1=x_r,
-                      y0=current_ttm_pe, y1=current_ttm_pe,
+                      y0=current_pe_q, y1=current_pe_q,
                       line=dict(color=C["teal"], width=1.5, dash="dot"), opacity=0.45)
-        fig.add_annotation(x=len(qtr)-1, y=current_ttm_pe * 1.3,
-                          text=f"当前TTM PE {current_ttm_pe:.1f}×",
+        fig.add_annotation(x=len(qtr)-1, y=current_pe_q * 1.3,
+                          text=f"当前当期PE {current_pe_q:.1f}×",
                           showarrow=False,
                           font=dict(size=10, color=C["teal"]), xanchor="right")
 
@@ -1523,20 +1522,20 @@ def ch4c_price_ttm_pe_trend():
         vals = []
         for i in range(len(qtr)):
             lbl = q_labels[i]
-            if start_q <= lbl <= end_q and ttm_pe_vals[i] is not None:
-                vals.append(ttm_pe_vals[i])
+            if start_q <= lbl <= end_q and pe_q_vals[i] is not None:
+                vals.append(pe_q_vals[i])
         return f"{sum(vals)/len(vals):.0f}×" if vals else "—"
 
     phases = [
         {"start_q": "2018Q1", "end_q": "2020Q4",
          "color": "rgba(243,156,18,0.08)", "line_color": "rgba(243,156,18,0.35)",
-         "label": "扩张溢价期", "sub": f"TTM PE均值 ~{avg_pe_in_range('2018Q1','2020Q4')}"},
+         "label": "扩张溢价期", "sub": f"当期PE均值 ~{avg_pe_in_range('2018Q1','2020Q4')}"},
         {"start_q": "2021Q1", "end_q": "2022Q4",
          "color": "rgba(127,140,141,0.06)", "line_color": "rgba(127,140,141,0.30)",
-         "label": "去溢价期", "sub": f"TTM PE均值 ~{avg_pe_in_range('2021Q1','2022Q4')} · 含亏损断点"},
+         "label": "去溢价期", "sub": f"当期PE均值 ~{avg_pe_in_range('2021Q1','2022Q4')} · 含亏损断点"},
         {"start_q": "2023Q1", "end_q": q_labels[-1],
          "color": "rgba(26,188,156,0.07)", "line_color": "rgba(26,188,156,0.30)",
-         "label": "成熟价值期", "sub": f"TTM PE均值 ~{avg_pe_in_range('2023Q1', q_labels[-1])}"},
+         "label": "成熟价值期", "sub": f"当期PE均值 ~{avg_pe_in_range('2023Q1', q_labels[-1])}"},
     ]
     for ph in phases:
         i0 = find_q_idx(ph["start_q"])
@@ -1576,7 +1575,7 @@ def ch4c_price_ttm_pe_trend():
     )
     # 右轴：对数刻度 TTM PE
     fig.update_yaxes(
-        title=dict(text="TTM PE（对数刻度·倍）", font=dict(size=12, color=C["teal"])),
+        title=dict(text="当期PE（对数刻度·倍）", font=dict(size=12, color=C["teal"])),
         type="log",
         range=[np.log10(max(pe_min * 0.8, 1.5)), np.log10(pe_max * 1.5)],
         tickfont=dict(size=11, color=C["teal"]),
@@ -1586,7 +1585,7 @@ def ch4c_price_ttm_pe_trend():
     fig.update_layout(
         template=PLOTLY_TEMPLATE,
         font=dict(family="Microsoft YaHei, PingFang SC, sans-serif", size=12, color="#1a1a1a"),
-        title=dict(text=f"股价走势与TTM PE（对数右轴·亏损断开）— 季度粒度（2018Q1-{q_labels[-1]}）{mode_note}",
+        title=dict(text=f"股价走势与当期PE（对数右轴·亏损断开）— 季度粒度（2018Q1-{q_labels[-1]}）{mode_note}",
                    x=0.02, y=0.98, font=dict(size=15, color="#1a1a1a")),
         height=480,
         legend=dict(orientation="h", yanchor="bottom", y=1.08, font=dict(size=11)),
@@ -2150,9 +2149,9 @@ HTML = """<!DOCTYPE html>
     <h3>3e. 股价走势与PB估值</h3>
     {price_pe_ch4b}
     <p style="font-size:12px;color:#888">PB（市净率）= 季末收盘价 ÷ 季末每股净资产（BPS）。BPS始终为正，不受周期盈亏影响，走势与股价天然协调。三个阶段底色标注了牧原从"成长股溢价"到"成熟周期股定价"的范式转换。</p>
-    <h3>3f. 股价走势与TTM PE估值</h3>
+    <h3>3f. 股价走势与当期PE估值</h3>
     {price_cycle_pe_ch4c}
-    <p style="font-size:12px;color:#888">TTM PE = 季末收盘价 ÷ 过去4季度EPS之和。右轴使用<b>对数刻度</b>——天然压缩极端值（10×→100×与1×→10×视觉跨度相同），解决了周期底部PE爆炸撑破图表的问题。亏损季度（TTM EPS≤0）PE折线自动断开。金色虚线为当前周期均值PE（{current_cycle_pe_val:.1f}× = 股价 ÷ 8年均EPS {avg8_eps:.2f}元）作为参考锚。阶段标签中的"TTM PE均值"仅统计有意义的盈利季度。</p>
+    <p style="font-size:12px;color:#888">当期PE = 季末收盘价 ÷（单季EPS × 4），即用当前季度盈利年化作为估值基础。比TTM更敏锐——单季利润变化立刻反映在PE上，不会被过去几个季度平滑掉。右轴使用<b>对数刻度</b>，天然压缩极端值。亏损季度自动断开。金色虚线为当前周期均值PE（{current_cycle_pe_val:.1f}× = 股价 ÷ 8年均EPS {avg8_eps:.2f}元）作为参考锚。</p>
     <div class="box-green">
       <p style="margin:0"><b>相对价值法结论：</b>牧原在同行中<b>综合排名第1</b>（成本最低、ROE最高、规模最大）。
       同行周期PE参考：温氏~28×、神农~36×（新希望/正邦周期EPS≤0，PE无意义）。
