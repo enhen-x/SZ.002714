@@ -2086,11 +2086,40 @@ def ch11_historical_validation():
         else:
             cycle_eps_vals.append(None)
 
-    # ── 5. PE法估值线（滚动8Y周期EPS × PE倍数）──
-    pe_presets = [12, 15, 22, 28]
-    pe_colors = {12: "#27ae60", 15: "#1abc9c", 22: "#e67e22", 28: "#c0392b"}
+    # ── 5. PE法估值线（基于市场实际支付的周期PE校准）──
+    # 校准逻辑：不再用固定倍数(12-28×)，而是反推市场每个季度实际支付的周期PE
+    #   实际周期PE = 实际季均价 / 滚动8Y周期EPS，取分位数作为估值带与核心线
+    actual_pe_multi = []
+    for i in range(n):
+        if cycle_eps_vals[i] and cycle_eps_vals[i] > 0 and avg_close[i] > 0:
+            actual_pe_multi.append(avg_close[i] / cycle_eps_vals[i])
+        else:
+            actual_pe_multi.append(None)
+    valid_pe = [v for v in actual_pe_multi
+                if v is not None and not (isinstance(v, float) and np.isnan(v))]
+
+    if len(valid_pe) >= 8:
+        pe_cal = {p: float(np.percentile(valid_pe, p)) for p in [10, 25, 50, 75, 90]}
+    else:
+        pe_cal = {10: 12.0, 25: 15.0, 50: 20.0, 75: 25.0, 90: 30.0}
+    pe_band_lo = round(pe_cal[10])   # 估值带下沿（市场实际10%分位）
+    pe_band_hi = round(pe_cal[90])   # 估值带上沿（市场实际90%分位）
+    pe_cons = round(pe_cal[25])      # 保守线（25%分位）
+    pe_mid = round(pe_cal[50])       # 中枢线（中位数）
+    pe_opti = round(pe_cal[75])      # 乐观线（75%分位）
+
+    pe_core = sorted({pe_cons, pe_mid, pe_opti})  # 去重保护
+    pe_colors = {}
+    if pe_mid in pe_core:
+        pe_colors[pe_mid] = "#e67e22"   # 中枢 — 橙
+    if pe_cons in pe_core and pe_cons != pe_mid:
+        pe_colors[pe_cons] = "#1abc9c"  # 保守 — 青
+    if pe_opti in pe_core and pe_opti != pe_mid:
+        pe_colors[pe_opti] = "#c0392b"  # 乐观 — 红
+
+    pe_mults = sorted(set([pe_band_lo, pe_band_hi] + pe_core))
     pe_data = {}
-    for pe_m in pe_presets:
+    for pe_m in pe_mults:
         vals = []
         for i in range(n):
             if cycle_eps_vals[i] and cycle_eps_vals[i] > 0:
@@ -2115,11 +2144,39 @@ def ch11_historical_validation():
         else:
             trailing_pe_12.append(None)
 
-    # ── 6. PB法估值线（BPS × PB倍数）──
-    pb_presets = [2.0, 3.0, 4.0, 5.0]
-    pb_colors = {2.0: "#2c3e50", 3.0: "#2980b9", 4.0: "#8e44ad", 5.0: "#c0392b"}
+    # ── 6. PB法估值线（基于市场实际支付的PB校准）──
+    # 校准逻辑：实际PB = 实际季均价 / BPS，取分位数作为估值带与核心线
+    actual_pb_multi = []
+    for i in range(n):
+        if pd.notna(bps_vals[i]) and bps_vals[i] > 0 and avg_close[i] > 0:
+            actual_pb_multi.append(avg_close[i] / bps_vals[i])
+        else:
+            actual_pb_multi.append(None)
+    valid_pb = [v for v in actual_pb_multi
+                if v is not None and not (isinstance(v, float) and np.isnan(v))]
+
+    if len(valid_pb) >= 8:
+        pb_cal = {p: float(np.percentile(valid_pb, p)) for p in [10, 25, 50, 75, 90]}
+    else:
+        pb_cal = {10: 2.0, 25: 3.0, 50: 3.5, 75: 4.5, 90: 5.5}
+    pb_band_lo = round(pb_cal[10], 1)   # 估值带下沿（10%分位）
+    pb_band_hi = round(pb_cal[90], 1)   # 估值带上沿（90%分位）
+    pb_cons = round(pb_cal[25], 1)      # 保守线（25%分位）
+    pb_mid = round(pb_cal[50], 1)       # 中枢线（中位数）
+    pb_opti = round(pb_cal[75], 1)      # 乐观线（75%分位）
+
+    pb_core = sorted({pb_cons, pb_mid, pb_opti})  # 去重保护
+    pb_colors = {}
+    if pb_mid in pb_core:
+        pb_colors[pb_mid] = "#2980b9"    # 中枢 — 蓝
+    if pb_cons in pb_core and pb_cons != pb_mid:
+        pb_colors[pb_cons] = "#2c3e50"   # 保守 — 深蓝灰
+    if pb_opti in pb_core and pb_opti != pb_mid:
+        pb_colors[pb_opti] = "#8e44ad"   # 乐观 — 紫
+
+    pb_mults = sorted(set([pb_band_lo, pb_band_hi] + pb_core))
     pb_data = {}
-    for pb_m in pb_presets:
+    for pb_m in pb_mults:
         vals = []
         for i in range(n):
             if pd.notna(bps_vals[i]) and bps_vals[i] > 0:
@@ -2172,18 +2229,22 @@ def ch11_historical_validation():
                 np.percentile(diffs, 25),
                 np.percentile(diffs, 75))
 
-    pe15_vals = pe_data[15]
-    pb3_vals = pb_data[3.0]
+    pe_mid_vals = pe_data[pe_mid]
+    pb_mid_vals = pb_data[pb_mid]
+    pe_cons_vals = pe_data[pe_cons]
+    pb_cons_vals = pb_data[pb_cons]
 
-    pe_dev_med, pe_dev_q1, pe_dev_q3 = calc_deviation(pe15_vals)
-    pb_dev_med, pb_dev_q1, pb_dev_q3 = calc_deviation(pb3_vals)
+    pe_dev_med, pe_dev_q1, pe_dev_q3 = calc_deviation(pe_mid_vals)
+    pe_cons_dev_med, _, _ = calc_deviation(pe_cons_vals)
+    pb_dev_med, pb_dev_q1, pb_dev_q3 = calc_deviation(pb_mid_vals)
+    pb_cons_dev_med, _, _ = calc_deviation(pb_cons_vals)
     dcf_dev_med, dcf_dev_q1, dcf_dev_q3 = calc_deviation(dcf_vals)
 
-    # 当前偏离
-    current_pe15_val = cycle_eps_vals[-1] * 15 if cycle_eps_vals[-1] and cycle_eps_vals[-1] > 0 else None
-    current_pb3_val = bps_vals[-1] * 3.0 if pd.notna(bps_vals[-1]) and bps_vals[-1] > 0 else None
-    current_dev_pe = ((current_pe15_val - CURRENT_PRICE) / CURRENT_PRICE * 100) if current_pe15_val else None
-    current_dev_pb = ((current_pb3_val - CURRENT_PRICE) / CURRENT_PRICE * 100) if current_pb3_val else None
+    # 当前偏离（用校准后的中枢倍数）
+    current_pe_mid_val = cycle_eps_vals[-1] * pe_mid if cycle_eps_vals[-1] and cycle_eps_vals[-1] > 0 else None
+    current_pb_mid_val = bps_vals[-1] * pb_mid if pd.notna(bps_vals[-1]) and bps_vals[-1] > 0 else None
+    current_dev_pe = ((current_pe_mid_val - CURRENT_PRICE) / CURRENT_PRICE * 100) if current_pe_mid_val else None
+    current_dev_pb = ((current_pb_mid_val - CURRENT_PRICE) / CURRENT_PRICE * 100) if current_pb_mid_val else None
 
     # ── 9. 绘图：拆分为三个独立图表（各带独立图例 + 图下方解释）──
     tick_indices, tick_labels = [], []
@@ -2213,27 +2274,32 @@ def ch11_historical_validation():
         )
         fig.update_yaxes(title=y_title)
 
-    # ══════ 图① PE法（含 DCF + 近4季EPS×12×）══════
+    # ══════ 图① PE法（市场实际周期PE校准 + DCF + 近4季EPS×12×）══════
     fig_pe = go.Figure()
-    pe_lower = pe_data[12]
-    pe_upper = pe_data[28]
+    pe_lower = pe_data[pe_band_lo]
+    pe_upper = pe_data[pe_band_hi]
     fig_pe.add_trace(go.Scatter(
         x=list(range(n)) + list(range(n - 1, -1, -1)),
         y=pe_lower + [pe_upper[i] if pe_upper[i] is not None else pe_lower[n-1-i]
                        for i in range(n - 1, -1, -1)],
         fill="toself", fillcolor="rgba(39,174,96,0.08)",
         line=dict(color="rgba(255,255,255,0)", width=0),
-        name="PE 12-28× 估值区间", hoverinfo="skip",
+        name=f"PE {pe_band_lo}-{pe_band_hi}× 市场实际区间", hoverinfo="skip",
     ))
     fig_pe.add_trace(go.Scatter(
-        x=list(range(n)), y=pe_data[15], mode="lines",
-        line=dict(color=pe_colors[15], width=1.8, dash="dash"),
-        name="PE 15×（保守）",
+        x=list(range(n)), y=pe_data[pe_cons], mode="lines",
+        line=dict(color=pe_colors[pe_cons], width=1.8, dash="dash"),
+        name=f"PE {pe_cons}×（25%分位·保守）",
     ))
     fig_pe.add_trace(go.Scatter(
-        x=list(range(n)), y=pe_data[22], mode="lines",
-        line=dict(color=pe_colors[22], width=1.8, dash="dash"),
-        name="PE 22×（乐观）",
+        x=list(range(n)), y=pe_data[pe_mid], mode="lines",
+        line=dict(color=pe_colors[pe_mid], width=1.8, dash="dash"),
+        name=f"PE {pe_mid}×（中位·中枢）",
+    ))
+    fig_pe.add_trace(go.Scatter(
+        x=list(range(n)), y=pe_data[pe_opti], mode="lines",
+        line=dict(color=pe_colors[pe_opti], width=1.8, dash="dash"),
+        name=f"PE {pe_opti}×（75%分位·乐观）",
     ))
     fig_pe.add_trace(go.Scatter(
         x=list(range(n)), y=dcf_vals, mode="lines+markers",
@@ -2252,80 +2318,92 @@ def ch11_historical_validation():
         line=dict(color=C["dark"], width=2.5),
         name="实际季均价",
     ))
-    _style_fig(fig_pe, f"① PE法回测：滚动8Y周期EPS × 12~28× vs 实际季均价{mode_note}", "股价（元）")
+    _style_fig(fig_pe, f"① PE法回测：滚动8Y周期EPS × {pe_band_lo}~{pe_band_hi}×（市场实际分位） vs 实际季均价{mode_note}", "股价（元）")
 
     pe_note = (
-        "<b>📊 PE法统计（历史中位偏离）</b>　"
-        + f"PE 15×: <b>{pe_dev_med:+.0f}%</b>　·　DCF简化: {dcf_dev_med:+.0f}%<br>"
-        + f"<b>📌 当前偏离：</b>PE 15× = {current_dev_pe:+.0f}%（{_pe_label}）<br><br>"
-        + "<b>🔍 方法解读——PE 15×（周期均值）</b><br>"
-        + "Graham &amp; Dodd 方法：8年滚动周期均值EPS × 15×，消除猪周期噪音，代表正常化价值。<br>"
-        + "优点：稳定、不随短期利润摇摆。缺点：无法解释市场的短期定价<br>"
-        + "（市场实际对近期利润定价）。<br><br>"
+        "<b>📊 市场实际周期PE（校准结果）</b>　"
+        + f"10%分位={pe_cal[10]:.0f}×　25%={pe_cal[25]:.0f}×　<b>中位={pe_cal[50]:.0f}×</b>　75%={pe_cal[75]:.0f}×　90%={pe_cal[90]:.0f}×<br>"
+        + f"<b>📌 当前偏离：</b>PE {pe_mid}× = {current_dev_pe:+.0f}%（{_pe_label}）　"
+        + f"历史中位偏离: 中枢{pe_mid}× {pe_dev_med:+.0f}%、保守{pe_cons}× {pe_cons_dev_med:+.0f}%<br><br>"
+        + "<b>🔍 为什么原来15-22×太保守</b><br>"
+        + "市场对牧原实际支付的周期PE中位数约"
+        + f"{pe_cal[50]:.0f}×（10%~90%分位 {pe_cal[10]:.0f}~{pe_cal[90]:.0f}×），"
+        + "明显高于模型原假设的15-22×。<br>"
+        + "原因：市场并非按8年周期均值定价，而是对<b>龙头成长性 + 成本护城河 + 周期反转预期</b>给出溢价。<br>"
+        + f"校准后的估值带（{pe_band_lo}-{pe_band_hi}×）才真正覆盖了历史股价的主体区间。<br><br>"
         + "<b>🔴 近4季EPS×12×（红色虚线）——市场短期定价</b><br>"
         + "用最近4个季度真实利润×12倍PE，大幅波动、跟踪市场情绪——<br>"
-        + "展示市场实际在做的事（对近期利润定价而非周期均值）。<br>"
-        + "与PE 15×的差距 = 市场情绪过度悲观/乐观的程度。"
+        + "与周期均值线的差距 = 市场情绪过度悲观/乐观的程度。"
     )
 
-    # ══════ 图② PB法 ══════
+    # ══════ 图② PB法（市场实际PB校准）══════
     fig_pb = go.Figure()
-    pb_lower = pb_data[2.0]
-    pb_upper = pb_data[5.0]
+    pb_lower = pb_data[pb_band_lo]
+    pb_upper = pb_data[pb_band_hi]
     fig_pb.add_trace(go.Scatter(
         x=list(range(n)) + list(range(n - 1, -1, -1)),
         y=pb_lower + [pb_upper[i] if pb_upper[i] is not None else pb_lower[n-1-i]
                        for i in range(n - 1, -1, -1)],
         fill="toself", fillcolor="rgba(41,128,185,0.08)",
         line=dict(color="rgba(255,255,255,0)", width=0),
-        name="PB 2-5× 估值区间", hoverinfo="skip",
+        name=f"PB {pb_band_lo}-{pb_band_hi}× 市场实际区间", hoverinfo="skip",
     ))
     fig_pb.add_trace(go.Scatter(
-        x=list(range(n)), y=pb_data[3.0], mode="lines",
-        line=dict(color=pb_colors[3.0], width=1.8, dash="dash"),
-        name="PB 3.0×（中枢）",
+        x=list(range(n)), y=pb_data[pb_cons], mode="lines",
+        line=dict(color=pb_colors[pb_cons], width=1.8, dash="dash"),
+        name=f"PB {pb_cons}×（25%分位·保守）",
     ))
     fig_pb.add_trace(go.Scatter(
-        x=list(range(n)), y=pb_data[4.0], mode="lines",
-        line=dict(color=pb_colors[4.0], width=1.8, dash="dash"),
-        name="PB 4.0×（乐观）",
+        x=list(range(n)), y=pb_data[pb_mid], mode="lines",
+        line=dict(color=pb_colors[pb_mid], width=1.8, dash="dash"),
+        name=f"PB {pb_mid}×（中位·中枢）",
+    ))
+    fig_pb.add_trace(go.Scatter(
+        x=list(range(n)), y=pb_data[pb_opti], mode="lines",
+        line=dict(color=pb_colors[pb_opti], width=1.8, dash="dash"),
+        name=f"PB {pb_opti}×（75%分位·乐观）",
     ))
     fig_pb.add_trace(go.Scatter(
         x=list(range(n)), y=avg_close, mode="lines",
         line=dict(color=C["dark"], width=2.5),
         name="实际季均价",
     ))
-    _style_fig(fig_pb, f"② PB法回测：BPS × 2.0~5.0× vs 实际季均价{mode_note}", "股价（元）")
+    _style_fig(fig_pb, f"② PB法回测：BPS × {pb_band_lo}~{pb_band_hi}×（市场实际分位） vs 实际季均价{mode_note}", "股价（元）")
 
     pb_note = (
-        "<b>📊 PB法统计（历史中位偏离）</b>　"
-        + f"PB 3.0×: <b>{pb_dev_med:+.0f}%</b><br>"
-        + f"<b>📌 当前偏离：</b>PB 3.0× = {current_dev_pb:+.0f}%（{_pb_label}）<br><br>"
-        + "<b>🔍 方法解读——PB 3.0×（净资产法）</b><br>"
-        + "BPS × 3×。<b>长期低于股价是正常现象</b>——牧原 ROE&gt;20%，<br>"
-        + "市场为特许经营权支付溢价（不在净资产中体现）。<br>"
-        + "PB更适合作为<b>底价/地板参考</b>，而非目标价。"
+        "<b>📊 市场实际PB（校准结果）</b>　"
+        + f"10%分位={pb_cal[10]:.1f}×　25%={pb_cal[25]:.1f}×　<b>中位={pb_cal[50]:.1f}×</b>　75%={pb_cal[75]:.1f}×　90%={pb_cal[90]:.1f}×<br>"
+        + f"<b>📌 当前偏离：</b>PB {pb_mid}× = {current_dev_pb:+.0f}%（{_pb_label}）　"
+        + f"历史中位偏离: 中枢{pb_mid}× {pb_dev_med:+.0f}%、保守{pb_cons}× {pb_cons_dev_med:+.0f}%<br><br>"
+        + "<b>🔍 为什么原来PB倍数与实价不符</b><br>"
+        + "市场实际支付的PB中位数约"
+        + f"{pb_cal[50]:.1f}×（10%~90%分位 {pb_cal[10]:.1f}~{pb_cal[90]:.1f}×），"
+        + "随净资产增长与周期景气动态变化。<br>"
+        + "BPS逐年增厚（留存收益滚动积累），同样股价对应PB逐年走低——<br>"
+        + f"固定3-4×无法跟随，校准后的PB带（{pb_band_lo}-{pb_band_hi}×）才与实际股价匹配。<br><br>"
+        + "<b>💡 用法</b>：PB仍宜作为<b>底价/地板参考</b>（下行保护），"
+        + "目标价判断以PE周期均值法 + DCF为主。"
     )
 
-    # ══════ 图③ 偏离度 ══════
-    pe15_dev_vals = []
-    pb3_dev_vals = []
+    # ══════ 图③ 偏离度（用校准后中枢倍数）══════
+    pe_mid_dev_vals = []
+    pb_mid_dev_vals = []
     dcf_dev_vals = []
     for i in range(n):
-        if pe15_vals[i] is not None and avg_close[i] > 0:
-            pe15_dev_vals.append((pe15_vals[i] - avg_close[i]) / avg_close[i] * 100)
+        if pe_mid_vals[i] is not None and avg_close[i] > 0:
+            pe_mid_dev_vals.append((pe_mid_vals[i] - avg_close[i]) / avg_close[i] * 100)
         else:
-            pe15_dev_vals.append(None)
-        if pb3_vals[i] is not None and avg_close[i] > 0:
-            pb3_dev_vals.append((pb3_vals[i] - avg_close[i]) / avg_close[i] * 100)
+            pe_mid_dev_vals.append(None)
+        if pb_mid_vals[i] is not None and avg_close[i] > 0:
+            pb_mid_dev_vals.append((pb_mid_vals[i] - avg_close[i]) / avg_close[i] * 100)
         else:
-            pb3_dev_vals.append(None)
+            pb_mid_dev_vals.append(None)
         if dcf_vals[i] is not None and avg_close[i] > 0:
             dcf_dev_vals.append((dcf_vals[i] - avg_close[i]) / avg_close[i] * 100)
         else:
             dcf_dev_vals.append(None)
 
-    all_dev = [v for v in pe15_dev_vals + pb3_dev_vals + dcf_dev_vals
+    all_dev = [v for v in pe_mid_dev_vals + pb_mid_dev_vals + dcf_dev_vals
                if v is not None and not (isinstance(v, float) and np.isnan(v))]
     dev_min = min(all_dev) if all_dev else -100
     dev_max = max(all_dev) if all_dev else 200
@@ -2335,14 +2413,14 @@ def ch11_historical_validation():
 
     fig_dev = go.Figure()
     fig_dev.add_trace(go.Scatter(
-        x=list(range(n)), y=pe15_dev_vals, mode="lines",
-        line=dict(color=pe_colors[15], width=1.8),
-        name="PE 15× 偏离度（周期均值法）",
+        x=list(range(n)), y=pe_mid_dev_vals, mode="lines",
+        line=dict(color=pe_colors[pe_mid], width=1.8),
+        name=f"PE {pe_mid}× 偏离度（中枢·校准后）",
     ))
     fig_dev.add_trace(go.Scatter(
-        x=list(range(n)), y=pb3_dev_vals, mode="lines",
-        line=dict(color=pb_colors[3.0], width=1.8, dash="dash"),
-        name="PB 3.0× 偏离度（净资产法）",
+        x=list(range(n)), y=pb_mid_dev_vals, mode="lines",
+        line=dict(color=pb_colors[pb_mid], width=1.8, dash="dash"),
+        name=f"PB {pb_mid}× 偏离度（中枢·校准后）",
     ))
     fig_dev.add_trace(go.Scatter(
         x=list(range(n)), y=dcf_dev_vals, mode="lines",
@@ -2352,18 +2430,18 @@ def ch11_historical_validation():
     fig_dev.add_hline(y=0, line_dash="solid", line_color="#999", line_width=1)
     fig_dev.add_hline(y=20, line_dash="dot", line_color="#bbb", line_width=0.8)
     fig_dev.add_hline(y=-20, line_dash="dot", line_color="#bbb", line_width=0.8)
-    _style_fig(fig_dev, "③ 估值偏离度（%）：各方法估值 vs 实际股价", "偏离度（%）")
+    _style_fig(fig_dev, "③ 估值偏离度（%）：校准后中枢倍数估值 vs 实际股价", "偏离度（%）")
     fig_dev.update_yaxes(range=[dev_lo, dev_hi])
 
     dev_note = (
-        "<b>📊 偏离度统计（历史中位偏离）</b>　"
-        + f"PE 15×: {pe_dev_med:+.0f}%　·　PB 3.0×: {pb_dev_med:+.0f}%　·　DCF: {dcf_dev_med:+.0f}%<br><br>"
+        "<b>📊 偏离度统计（历史中位偏离，校准后）</b>　"
+        + f"PE {pe_mid}×: {pe_dev_med:+.0f}%　·　PB {pb_mid}×: {pb_dev_med:+.0f}%　·　DCF: {dcf_dev_med:+.0f}%<br><br>"
         + "<b>🔍 如何解读偏离度</b><br>"
         + "正值 = 估值高于股价 = 低估；负值 = 高估。<br>"
-        + "若某种方法历史上长期为正（如PB），说明市场长期给予该口径溢价，<br>"
-        + "该方法应作<b>地板/底价参考</b>而非目标价。<br>"
-        + "真正有效的估值方法，股价应在估值区间内上下穿越<br>"
-        + "（偏离度围绕0上下摆动）。三条线同步转正，往往意味着周期底部机会。"
+        + "校准后中枢倍数（PE/PB中位）的偏离度围绕0波动——<br>"
+        + "说明估值带已真实反映市场定价，穿越即机会。<br>"
+        + "偏离度明显为正 = 股价低于该倍数下的公允值（低估）；为负 = 偏高。<br>"
+        + "三条线同步转正，往往意味着周期底部机会。"
     )
 
     # 返回三张独立图表：(fig, 图下方解释)
