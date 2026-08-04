@@ -1125,6 +1125,119 @@ def ch4_pe_band():
     )
     return fig
 
+def ch4b_price_pe_trend():
+    """股价走势与PE双轴图 — 年度股价区间 + PE(TTM)折线"""
+    yrs_range = sorted(STOCK_ANNUAL_RANGE.keys())  # [2017, ..., 2025]
+
+    # 构建股价数据
+    mid_prices = [(STOCK_ANNUAL_RANGE[yr][0] + STOCK_ANNUAL_RANGE[yr][1]) / 2 for yr in yrs_range]
+    high_prices = [STOCK_ANNUAL_RANGE[yr][0] for yr in yrs_range]
+    low_prices = [STOCK_ANNUAL_RANGE[yr][1] for yr in yrs_range]
+
+    # 构建PE数据（只用2018+有PE的年份，亏损年断开）
+    pe_vals, pe_yrs, pe_hover = [], [], []
+    for yr in yrs_range:
+        if yr in HIST_PE:
+            hp = HIST_PE[yr]
+            if hp["is_loss"] or hp["pe"] is None:
+                pe_vals.append(None)
+                pe_yrs.append(yr)
+                pe_hover.append(f"{yr}年<br>全年亏损 · PE无意义")
+            else:
+                pe = max(0.5, min(hp["pe"], 80))
+                pe_vals.append(pe)
+                pe_yrs.append(yr)
+                pe_hover.append(f"{yr}年<br>年末PE(TTM) = {pe:.1f}×<br>EPS = {FIN[yr]['eps']:.2f}元")
+        else:
+            pe_vals.append(None)
+            pe_yrs.append(yr)
+            pe_hover.append(f"{yr}年<br>数据缺失")
+
+    fig = make_subplots(specs=[[{"secondary_y": True}]])
+
+    # 股价区间（灰色带状）
+    fig.add_trace(go.Scatter(
+        x=yrs_range + yrs_range[::-1],
+        y=high_prices + low_prices[::-1],
+        fill="toself", fillcolor="rgba(41,128,185,0.12)",
+        line=dict(color="rgba(255,255,255,0)", width=0),
+        name="股价年度区间", hoverinfo="skip",
+    ), secondary_y=False)
+
+    # 股价中位线
+    price_hover = []
+    for yr, hi, lo, mid in zip(yrs_range, high_prices, low_prices, mid_prices):
+        price_hover.append(f"{yr}年<br>股价最高: {hi}元<br>股价最低: {lo}元<br>区间中值: {mid:.0f}元")
+    fig.add_trace(go.Scatter(
+        x=yrs_range, y=mid_prices, mode="lines+markers",
+        line=dict(color=C["midblue"], width=2.5),
+        marker=dict(size=9, color=C["midblue"], line=dict(color="white", width=2)),
+        name="股价（年中值）", text=price_hover, hoverinfo="text",
+    ), secondary_y=False)
+
+    # 当前股价参考线
+    x_left, x_right = yrs_range[0] - 0.3, yrs_range[-1] + 0.3
+    fig.add_shape(type="line", x0=x_left, x1=x_right,
+                  y0=CURRENT_PRICE, y1=CURRENT_PRICE,
+                  line=dict(color=C["midblue"], width=1.5, dash="dot"), opacity=0.5)
+    fig.add_annotation(x=yrs_range[-1], y=CURRENT_PRICE + 3,
+                       text=f"当前 {CURRENT_PRICE}元",
+                       showarrow=False, font=dict(size=10, color=C["midblue"]),
+                       xanchor="right")
+
+    # PE走势（右轴）
+    fig.add_trace(go.Scatter(
+        x=pe_yrs, y=pe_vals, mode="lines+markers",
+        line=dict(color=C["red"], width=2.2),
+        marker=dict(size=9, color=C["red"], line=dict(color="white", width=2)),
+        name="年末PE(TTM)", text=pe_hover, hoverinfo="text",
+        connectgaps=False,
+    ), secondary_y=True)
+
+    # 亏损年标注
+    for yr in yrs_range:
+        if yr in HIST_PE and HIST_PE[yr]["is_loss"]:
+            fig.add_annotation(x=yr, y=5, text="<b>亏损</b>",
+                              showarrow=True, arrowhead=2, arrowsize=1,
+                              arrowcolor=C["red"], font=dict(size=9, color=C["red"]), ay=-25)
+
+    # PE参考线
+    for pe_val, label in [(10, "PE=10×"), (20, "PE=20×"), (30, "PE=30×")]:
+        fig.add_shape(type="line", x0=x_left, x1=x_right,
+                      y0=pe_val, y1=pe_val,
+                      line=dict(color=C["gray"], width=0.8, dash="dot"), opacity=0.3, layer="below")
+
+    fig.update_xaxes(
+        tickmode="array", tickvals=yrs_range, ticktext=[str(yr) for yr in yrs_range],
+        tickfont=dict(size=11, color="#333"),
+        range=[x_left, x_right],
+        showgrid=True, gridcolor="#f0f0f0",
+    )
+    fig.update_yaxes(
+        title=dict(text="股价（元）", font=dict(size=12, color=C["midblue"])),
+        range=[0, max(high_prices) * 1.15],
+        tickfont=dict(size=11, color=C["midblue"]),
+        showgrid=True, gridcolor="#f0f0f0",
+        secondary_y=False,
+    )
+    fig.update_yaxes(
+        title=dict(text="PE 估值倍数（倍）", font=dict(size=12, color=C["red"])),
+        range=[0, 50], dtick=10,
+        tickfont=dict(size=11, color=C["red"]),
+        secondary_y=True,
+    )
+    fig.update_layout(
+        template=PLOTLY_TEMPLATE,
+        font=dict(family="Microsoft YaHei, PingFang SC, sans-serif", size=12, color="#1a1a1a"),
+        title=dict(text="股价走势与PE估值 — 年度股价区间 + 年末PE(TTM)（2017-2025）",
+                   x=0.02, y=0.98, font=dict(size=15, color="#1a1a1a")),
+        height=450,
+        legend=dict(orientation="h", yanchor="bottom", y=1.08),
+        margin=dict(l=55, r=55, t=80, b=60),
+        hovermode="x unified",
+    )
+    return fig
+
 def ch5_valuation_bridge():
     """四种方法 → 加权目标"""
     comps = WV["components"]
@@ -1676,6 +1789,9 @@ HTML = """<!DOCTYPE html>
     {peer_detail}
     <h3>3d. PE Band 历史区间</h3>
     {pe_band_ch4}
+    <h3>3e. 股价走势与PE估值</h3>
+    {price_pe_ch4b}
+    <p style="font-size:12px;color:#888">年度股价区间（灰色带）取每年最高最低价，中值线为高低价均值。PE(TTM)为年末时点数据，亏损年份PE无意义（折线断开）。2018年非瘟前恐慌期股价最低5元、PE仅4.4×——此后从未重现；2021年后低谷PE稳定在20-25×区间，反映市场对龙头韧性的信任。</p>
     <div class="box-green">
       <p style="margin:0"><b>相对价值法结论：</b>牧原在同行中<b>综合排名第1</b>（成本最低、ROE最高、规模最大）。
       同行周期PE参考：温氏~28×、神农~36×（新希望/正邦周期EPS≤0，PE无意义）。
@@ -1973,6 +2089,7 @@ def main():
         ("dcf_ch2", ch2_wacc_sensitivity),
         ("peer_ch3", ch3_peer_comparison),
         ("pe_band_ch4", ch4_pe_band),
+        ("price_pe_ch4b", ch4b_price_pe_trend),
         ("bridge_ch5", ch5_valuation_bridge),
         ("safety_ch6", ch6_safety_margin),
         ("summary_table", ch7_summary_table),
@@ -2106,6 +2223,7 @@ def main():
         dcf_detail=build_dcf_detail(),
         peer_ch3=chart_html["peer_ch3"],
         pe_band_ch4=chart_html["pe_band_ch4"],
+        price_pe_ch4b=chart_html["price_pe_ch4b"],
         peer_ranking=build_peer_ranking_detail(),
         peer_detail=build_peer_detail(),
         bridge_ch5=chart_html["bridge_ch5"],
