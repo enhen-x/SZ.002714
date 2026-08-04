@@ -239,6 +239,74 @@ WEIGHTED_MID=DCF_VAL["mid"]*0.2+RELATIVE_VAL["mid"]*0.6+MA_VAL["mid"]*0.1+LBO_VA
 WEIGHTED_HIGH=DCF_VAL["high"]*0.2+RELATIVE_VAL["high"]*0.6+MA_VAL["high"]*0.1+LBO_VAL["high"]*0.1
 PEAK_PE_LOW,PEAK_PE_MID,PEAK_PE_HIGH=10,14,16
 
+# ==================== 敏感性矩阵 ====================
+# 基于视频"边际成本定价"框架：猪价×出栏量×成本 → 净利润敏感性
+SENS_PRICES = [10, 11, 12, 13, 14, 15, 16, 17, 18]
+SENS_HOGS = [7500, 8000, 8500, 9000]
+SENS_COSTS = [10.5, 11.0, 11.5, 12.0, 12.5, 13.0]
+SENS_BASE_COST = 11.6
+SENS_BASE_HOG = 8000
+SENS_WEIGHT = 125  # 均重 kg
+
+def profit_simple(price, cost, hogs):
+    """简化利润模型：亿"""
+    return (price - cost) * SENS_WEIGHT * hogs / 10000
+
+# 猪价×出栏量 矩阵（成本固定=11.6）
+MATRIX_PRICE_HOG = {}
+for p in SENS_PRICES:
+    for h in SENS_HOGS:
+        MATRIX_PRICE_HOG[(p, h)] = profit_simple(p, SENS_BASE_COST, h)
+
+# 猪价×成本 矩阵（出栏固定=8000万）
+MATRIX_PRICE_COST = {}
+for p in SENS_PRICES:
+    for c in SENS_COSTS:
+        MATRIX_PRICE_COST[(p, c)] = profit_simple(p, c, SENS_BASE_HOG)
+
+def ch8_sensitivity():
+    """图表8: 猪价×出栏量→净利润 敏感性热力图"""
+    z_hog = [[MATRIX_PRICE_HOG[(p, h)] for h in SENS_HOGS] for p in SENS_PRICES]
+    z_cost = [[MATRIX_PRICE_COST[(p, c)] for c in SENS_COSTS] for p in SENS_PRICES]
+
+    fig = make_subplots(rows=1, cols=2,
+        subplot_titles=("猪价 × 出栏量 → 净利润（亿）<br><sub>完全成本=11.6元/kg, 均重=125kg</sub>",
+                        "猪价 × 完全成本 → 净利润（亿）<br><sub>出栏量=8000万头, 均重=125kg</sub>"),
+        horizontal_spacing=0.18)
+
+    # 左图: 猪价×出栏量
+    heat1 = go.Heatmap(
+        z=z_hog, x=[f"{h}万" for h in SENS_HOGS], y=[f"{p}元" for p in SENS_PRICES],
+        colorscale=[(0, "#c0392b"), (0.35, "#f5b7b1"), (0.45, "#fdebd0"),
+                    (0.5, "#f7f7f7"), (0.55, "#d5f5e3"), (0.7, "#82e0aa"), (1, "#1e8449")],
+        zmid=0, zmin=-300, zmax=800,
+        text=[[f"{MATRIX_PRICE_HOG[(p, h)]:.0f}亿" for h in SENS_HOGS] for p in SENS_PRICES],
+        texttemplate="%{text}", textfont={"size": 10, "color": "#1a1a1a"},
+        colorbar=dict(title="净利润(亿)", x=0.455, len=0.85), showscale=True,
+        hovertemplate="猪价=%{y}, 出栏=%{x}<br>净利润=%{z:.0f}亿<extra></extra>")
+
+    # 右图: 猪价×成本
+    heat2 = go.Heatmap(
+        z=z_cost, x=[f"{c}元" for c in SENS_COSTS], y=[f"{p}元" for p in SENS_PRICES],
+        colorscale=[(0, "#c0392b"), (0.35, "#f5b7b1"), (0.45, "#fdebd0"),
+                    (0.5, "#f7f7f7"), (0.55, "#d5f5e3"), (0.7, "#82e0aa"), (1, "#1e8449")],
+        zmid=0, zmin=-300, zmax=800,
+        text=[[f"{MATRIX_PRICE_COST[(p, c)]:.0f}亿" for c in SENS_COSTS] for p in SENS_PRICES],
+        texttemplate="%{text}", textfont={"size": 10, "color": "#1a1a1a"},
+        colorbar=dict(title="净利润(亿)", x=1.01, len=0.85),
+        hovertemplate="猪价=%{y}, 成本=%{x}<br>净利润=%{z:.0f}亿<extra></extra>")
+
+    fig.add_trace(heat1, row=1, col=1)
+    fig.add_trace(heat2, row=1, col=2)
+    fig.update_layout(
+        template=PLOTLY_TEMPLATE,
+        font=dict(family="Microsoft YaHei,PingFang SC,sans-serif", size=11, color="#1a1a1a"),
+        height=420, margin=dict(l=55, r=55, t=80, b=50),
+        title=dict(text="利润敏感性矩阵 — 猪价·出栏量·成本三变量", x=0.02, y=0.98, font_size=14))
+    fig.update_xaxes(title_text="", side="bottom")
+    fig.update_yaxes(title_text="猪价（元/kg）", row=1, col=1)
+    return fig
+
 # ==================== 图表生成 ====================
 
 def ch1_revenue_profit():
@@ -503,6 +571,7 @@ charts = {
     "ch5": ch5_pe_band(),
     "ch6": ch6_cycle_peak(),
     "ch7": ch7_weight_bridge(),
+    "ch8": ch8_sensitivity(),
 }
 
 def chart_div(chart_id, fig):
@@ -897,7 +966,70 @@ th{{font-weight:500;color:#888;font-size:12px;letter-spacing:.3px}}
     </p>
   </div>
 
-  <p class="source">来源：四种估值方法的完整参数和计算过程详见第6步估值报告及 data/sources/SOURCES.md。</p>
+  <h3>7.8 边际成本定价：猪价的"引力锚"</h3>
+  <div class="box">
+    <p style="margin:0"><b>核心理论（源自微观经济学 + B站视频研究的实地调研）</b>：<br>
+    猪价不是由行业平均成本决定的，也不是由最低成本企业（如牧原）决定的，而是由<b>满足需求所需最后一批产能的边际成本</b>决定的。换句话说——市场需要的最后一头猪，是由成本最高的那批养殖户生产出来的，他们的成本才是猪价的长期均衡锚。</p>
+  </div>
+  <div class="col2">
+    <div>
+      <h3>边际成本推导</h3>
+      <table>
+        <tr><th>产能层级</th><th>完全成本</th><th>占供给比</th><th>当前状态</th></tr>
+        <tr><td>牧原（成本最低）</td><td style='color:#27ae60'>11.3-11.6</td><td>~11%</td><td>盈利（现金层面）</td></tr>
+        <tr><td>集团场（温氏/新希望等）</td><td>12.0-13.0</td><td>~30%</td><td>亏损</td></tr>
+        <tr><td>规模场</td><td>13.0-14.5</td><td>~30%</td><td>深度亏损</td></tr>
+        <tr><td style='color:#c0392b'><b>边际产能（散户）</b></td><td style='color:#c0392b;font-weight:600'>~14.7</td><td style='color:#c0392b'><b>最后10%</b></td><td style='color:#c0392b'>严重失血→退出</td></tr>
+      </table>
+    </div>
+    <div>
+      <h3>均衡猪价推导</h3>
+      <p>边际成本 14.7 元/kg + 合理利润（吸引其继续养殖）→ 长期均衡猪价 ≈ <b style='font-size:18px;color:#2980b9'>15 元/kg</b></p>
+      <ul>
+        <li><b>高于 15 元</b>：边际产能盈利→扩产→供给增加→猪价回落</li>
+        <li><b>低于 15 元</b>：边际产能亏损→退出→供给减少→猪价回升</li>
+        <li><b>当前 10.5 元</b>：远低于均衡锚 → 去化是确定性的方向</li>
+      </ul>
+      <p style="font-size:12px;color:#888">数据来源：视频UP主实地调研。边际成本数据会随饲料价格/防疫成本/PSY变化而动态调整，需持续跟踪。</p>
+    </div>
+  </div>
+  <div class="box-orange">
+    <p style="margin:0"><b>⚠ 均衡价非精确值</b>：15 元是基于当前饲料/防疫/PSY 条件的估算。随着散户加速退出（边际供给者变为规模场）、PSY 提升、饲料成本下行，长期均衡价可能缓慢下移至 13.5-14.5 元/kg。但至少未来 1-2 年内，均衡锚显著高于当前猪价——<b>回归引力持续存在</b>。</p>
+  </div>
+
+  <h3>7.9 利润敏感性矩阵</h3>
+  <p>基于简化利润模型：<b>净利润 = (猪价 − 完全成本) × 均重 × 出栏量</b>。以下两张热力图揭示猪价、出栏量、成本三变量对利润的交互影响：</p>
+  {chart_div("ch8", charts["ch8"])}
+
+  <div class="box-green">
+    <p style="margin:0"><b>敏感性速算（源自视频研究）：</b><br>
+    ① <b>猪价每变动 ±1 元/kg</b> → 净利润变动 <b>±100 亿</b>（在 8000 万头出栏下）<br>
+    ② <b>成本每变动 ±0.1 元/kg</b> → 净利润变动 <b>±10 亿</b><br>
+    ③ <b>出栏量每变动 ±500 万头</b> → 净利润变动 ±(猪价-成本)×125×500/10000<br>
+    三个杠杆中，<b>猪价是决定性变量</b>——成本管理和出栏增长是"加分项"，但猪价方向决定了利润的<b>正负号</b>。</p>
+  </div>
+  <p style="font-size:12px;color:#888">上表为简化模型（不考虑屠宰、饲料、非 hog 业务、利息、税）。实际 EPS 需通过完整财务模型导出（见 §6.2）。</p>
+
+  <h3>7.10 峰值利润估值法（视频方法交叉验证）</h3>
+  <p>前述 DCF（7.1）和相对 PE（7.2）均基于<b>周期均值盈利</b>，回答"股票现在值多少钱"。以下引入视频研究的<b>峰值利润法</b>作为补充视角，回答"周期反转后股价能涨到多少"：</p>
+  <table>
+    <tr><th>猪价假设</th><th>推导逻辑</th><th>净利润（亿）</th><th>EPS（元）</th><th>PE=10×</th><th>PE=12×</th><th>PE=15×</th></tr>
+    <tr><td><b>14 元/kg</b></td><td>接近当前期货远期（LH2705=13.0）</td><td style='color:#e67e22'>240</td><td>4.2</td><td>42</td><td>50</td><td>63</td></tr>
+    <tr><td><b>15 元/kg</b></td><td>边际成本定价均衡锚</td><td style='color:#27ae60'>340</td><td>6.0</td><td>60</td><td style='font-weight:600'>72</td><td>90</td></tr>
+    <tr><td><b>16 元/kg</b></td><td>温和回归——猪周期常态峰值</td><td style='color:#27ae60'>440</td><td>7.7</td><td>77</td><td style='font-weight:600'>93</td><td>116</td></tr>
+    <tr><td><b>18 元/kg</b></td><td>较强回归——需供给大幅收缩</td><td style='color:#2980b9'>640</td><td>11.2</td><td>112</td><td style='font-weight:600'>135</td><td>169</td></tr>
+  </table>
+  <p style="font-size:12px;color:#888">假设：出栏 8,000 万头、完全成本 11.6 元/kg、均重 125kg、总股本 57 亿股。PE 10-15×（国外养猪股 10×，国内有增量+龙头溢价→12×合理）。</p>
+
+  <div class="box">
+    <p style="margin:0"><b>两套方法的关系——互补而非矛盾：</b><br>
+    ① <b>周期均值法（项目主框架）</b>：用 8 年均 EPS 2.04 元 × PE → 内在价值 38 元。这是"正常化"价值，已内嵌所有低谷年份。<br>
+    ② <b>峰值利润法（视频方法）</b>：用周期回归后的峰值利润 × PE → 目标 60-100 元。这是"周期回归后"价值。<br>
+    ③ <b>38 元到 60-100 元的差距</b> = 从周期底部到周期回归的涨幅空间 ≈ +58%~+163%。这正是周期股投资的本质——<b>在周期底部以低于正常化价值的价格买入，等待周期回归后获利</b>。<br>
+    ④ <b>DCF 50 元独立锚</b>：不依赖任何 PE 假设，为上述两套方法提供了中间的交叉验证点。</p>
+  </div>
+
+  <p class="source">来源：边际成本数据源自B站UP主实地调研（2026年中），敏感性模型为简化公式。峰值利润法源自B站视频研究（BV1vrNR6hEmL）。详见 reports/牧原深度分析估值对比.md。</p>
 </div>
 
 <hr class="page-break">
@@ -921,11 +1053,11 @@ th{{font-weight:500;color:#888;font-size:12px;letter-spacing:.3px}}
 
   <h3>8.2 核心论点（投资逻辑链）</h3>
   <ol>
-    <li><b>周期位置有利</b>：猪价处于重度亏损区（猪粮比 4.41），能繁母猪去化方向确定（Q2 -3.2%）。周期型公司的买入时机往往在最悲观时——但需接受底部可能进一步拉长（集团场主导的周期变形）。</li>
-    <li><b>成本护城河在低谷期被放大</b>：当全行业亏损时，成本最低者活到最后——现金成本仅 7.3 元/kg vs 猪价 10.5 元 → 牧原不亏现金、可硬扛；竞争对手的现金在流失。2026 年行业性亏损将是牧原市场份额进一步提升的窗口。</li>
-    <li><b>估值保护存在但安全边际不足</b>：19.3× 周期 PE 低于任何 2021 年以来的低谷水平。但如果采用视频研究的保守视角（养猪股 12-16× PE），当前价格偏贵。DCF 独立估值 50 元提供了另一种视角的支持。结论：当前价格合理但不够便宜。</li>
+    <li><b>周期位置有利</b>：猪价处于重度亏损区（猪粮比 4.41），能繁母猪去化方向确定（Q2 -3.2%）。边际成本定价框架显示当前猪价 10.5 元远低于均衡锚 15 元——回归引力持续存在。周期型公司的买入时机往往在最悲观时——但需接受底部可能进一步拉长（集团场主导的周期变形）。</li>
+    <li><b>成本护城河在低谷期被放大</b>：当全行业亏损时，成本最低者活到最后——现金成本仅 7.3 元/kg vs 猪价 10.5 元 → 牧原不亏现金、可硬扛；竞争对手的现金在流失。敏感性矩阵显示：猪价每涨 1 元，利润增 100 亿——成本优势的杠杆效应在周期上行时会被极度放大。2026 年行业性亏损将是牧原市场份额进一步提升的窗口。</li>
+    <li><b>估值保护存在但安全边际不足</b>：19.3× 周期 PE 低于任何 2021 年以来的低谷水平。但如果采用视频研究的保守视角（养猪股 12-16× PE），当前价格偏贵。DCF 独立估值 50 元提供了另一种视角的支持。峰值利润估值法揭示周期回归后目标 60-100 元——当前价格反映的是周期底部定价，尚未计入任何反转预期。</li>
     <li><b>催化剂逐渐积累</b>：能繁持续去化 → 淘汰母猪折价率下降 → 猪价拐点 → 盈利反转——未来 6-12 个月多条催化剂可能兑现。关键跟踪指标：能繁月度变化 + 淘汰母猪折价率。</li>
-    <li><b>周期高峰期权存在但需管理预期</b>：如果未来 2-3 内周期进入上行，按 12-16× PE × 周期高峰 EPS 5-7 元 ≈ 60-112 元/股。但需注意：本轮反转高度大概率低于上一轮超级周期（集团场产能弹性大，猪价反弹后供给恢复快）。</li>
+    <li><b>周期高峰期权存在但需管理预期</b>：如果未来 2-3 年内周期进入上行，按峰值利润估值法（§7.10）：猪价 15-18 元/kg × PE 10-15× → 股价 60-169 元。但需注意：本轮反转高度大概率低于上一轮超级周期（集团场产能弹性大，猪价反弹后供给恢复快）。保守取 15 元/kg + PE 12× = 72 元作为更审慎的峰值参考。</li>
   </ol>
 
   <h3>8.3 催化剂</h3>
