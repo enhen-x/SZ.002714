@@ -347,11 +347,12 @@ else:
 STOCK_ANNUAL_RANGE = {
     2017: (15, 9), 2018: (15, 5), 2019: (35, 14), 2020: (100, 35),
     2021: (92, 40), 2022: (63, 45), 2023: (55, 35), 2024: (88, 48), 2025: (79, 50),
+    2026: (50, 35),  # 截至2026-08-04：年初~50 → 年中低点~35，当前39.3
 }
 
 # 计算每年滚动8年周期均值EPS
 TROUGH_DATA = {}
-for yr in range(2017, 2026):
+for yr in range(2017, 2027):
     if yr not in FIN: continue
     cycle_years = [y for y in range(yr-7, yr+1) if y in FIN]
     if len(cycle_years) < 5: continue
