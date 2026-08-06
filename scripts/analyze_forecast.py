@@ -847,51 +847,44 @@ def build_methodology():
     )
 
 def build_valuation_preview():
-    """估值预览——基于周期平均 EPS × 合理 PE"""
+    """估值预览（市场验证框架）——基于第 6 步估值报告 §4-§5 结论"""
     cycle_yrs = [y for y in SORTED_YEARS if 2018 <= y <= 2025]
-    avg8_eps = sum(FIN[yr]["eps"] for yr in cycle_yrs) / len(cycle_yrs)
-    avg5_eps = sum(FIN[yr]["eps"] for yr in SORTED_YEARS if 2021 <= yr <= 2025) / 5
+    avg8 = sum(FIN[yr]["eps"] for yr in cycle_yrs) / len(cycle_yrs)
+    current_price = 39.3  # 2026-07-28 收盘
 
-    # 牧原历史 PE 区间
-    pe_low = 10   # 周期底部 PE
-    pe_mid = 15   # 合理 PE
-    pe_high = 22  # 周期顶部 PE
+    # 成熟期（2022+，56个月）市场验证倍数
+    pe_p25, pe_p50, pe_p75 = 21.1, 23.9, 26.4
+    pb_lo, pb_hi = 3.9, 4.3
+    fair_low = avg8 * pe_p25
+    fair_mid = avg8 * pe_p50
+    fair_high = avg8 * pe_p75
 
-    # 基于 8 年周期均值
-    val_low_8 = avg8_eps * pe_low
-    val_mid_8 = avg8_eps * pe_mid
-    val_high_8 = avg8_eps * pe_high
+    # 2025 年末 BPS（实际，单季度财报）
+    _qf = pd.read_csv(DATA_DIR / "主要财务指标_按单季度.csv", dtype=str)
+    _qf["REPORT_DATE"] = pd.to_datetime(_qf["REPORT_DATE"])
+    _qf["BPS"] = pd.to_numeric(_qf["BPS"], errors="coerce")
+    _q4 = _qf[_qf["REPORT_DATE"].dt.month == 12].sort_values("REPORT_DATE")
+    bps_2025 = float(_q4[_q4["REPORT_DATE"].dt.year == 2025]["BPS"].iloc[0])
 
-    # 基于 5 年近期均值
-    val_low_5 = avg5_eps * pe_low
-    val_mid_5 = avg5_eps * pe_mid
-    val_high_5 = avg5_eps * pe_high
+    rows = ""
+    for sc in ["上行", "基准", "下行"]:
+        bps28 = bps_2025 + FORECAST[sc][2026]["eps"] + FORECAST[sc][2027]["eps"] + FORECAST[sc][2028]["eps"]
+        p_lo = bps28 * pb_lo
+        p_hi = bps28 * pb_hi
+        rows += (f"<tr><td><b>{sc}</b></td><td>{FORECAST[sc][2028]['eps']:.2f}</td>"
+                 f"<td>{bps28:.2f}</td><td style='font-weight:600'>{p_lo:.0f}-{p_hi:.0f} 元</td></tr>")
 
-    # 当前股价参考（2026 年 7 月末约 38 元）
-    current_price = "~38"
-
-    return (f"<b>⚠️ 本节为估值预览——正式估值见第 6 步（使用 DCF + 相对价值法 + 并购价值法 + LBO 法交叉验证）。</b>"
-            f"<br><br>"
-            f"<b>简化估值（周期平均 EPS × 合理 PE）：</b>"
-            f"<br>"
-            f"· 基于 <b>8 年周期均值 EPS {avg8_eps:.2f}</b>："
-            f"PE {pe_low}× = <b>{val_low_8:.0f} 元</b>（保守），"
-            f"PE {pe_mid}× = <b>{val_mid_8:.0f} 元</b>（合理），"
-            f"PE {pe_high}× = <b>{val_high_8:.0f} 元</b>（乐观）"
-            f"<br>"
-            f"· 基于 <b>近 5 年均值 EPS {avg5_eps:.2f}</b>："
-            f"PE {pe_low}× = <b>{val_low_5:.0f} 元</b>（保守），"
-            f"PE {pe_mid}× = <b>{val_mid_5:.0f} 元</b>（合理），"
-            f"PE {pe_high}× = <b>{val_high_5:.0f} 元</b>（乐观）"
-            f"<br><br>"
-            f"<b>合理估值区间（8 年均值）：{val_low_8:.0f} - {val_mid_8:.0f} 元/股</b>"
-            f"<br>"
-            f"当前股价约 {current_price} 元，处于合理估值区间内。"
-            f"<br><br>"
-            f"<b>安全边际考量：</b>若取 8 年周期均值 PE 12×（更保守）= <b>{avg8_eps * 12:.0f} 元</b>，"
-            f"当前价格 {current_price} 元较此有 "
-            f"{(float(current_price.replace('~','')) - avg8_eps * 12) / (avg8_eps * 12) * 100:+.0f}% 的溢价。"
-            f"下行保护有限——投资需依赖猪价周期反转的催化。"
+    return (
+        f"<b>市场验证估值框架</b>（来自第 6 步估值报告 §4-§5；旧四方法加权未经市场检验，已删除）：<br>"
+        f"· <b>公平价值</b>：AVG8_EPS {avg8:.2f} × 成熟期周期均值PE {pe_p25:.1f}-{pe_p75:.1f}× "
+        f"= <b>{fair_low:.0f}-{fair_high:.0f} 元</b>（中枢 {fair_mid:.0f} 元）<br>"
+        f"· <b>2028 周期峰值</b>（主模型）：PB {pb_lo}-{pb_hi}×（2025 成熟期峰值实测 4.25×）× 2028E BPS：<br>"
+        f"<table><thead><tr><th>情景</th><th>2028E EPS</th><th>2028E BPS</th><th>峰值股价</th></tr></thead>"
+        f"<tbody>{rows}</tbody></table><br>"
+        f"· <b>当前价格 {current_price} 元</b>：低于公平价值下沿（{fair_low:.0f} 元），"
+        f"处于成熟期估值分布最低十分位（周期PE 19.3× ≈ P10 19.1×）。<br>"
+        f"· 完整方法与交叉验证（周期PE 峰值 23.8-25.8× 为下限参照；视频峰值利润法 60-100 元为区间参照）"
+        f"详见第 6 步估值报告。"
     )
 
 # ==================== HTML 模板 ====================
@@ -1044,10 +1037,10 @@ HTML = """<!DOCTYPE html>
     <p style="margin-top:12px">根据 Hooke 方法论，周期型公司估值应使用<b>整个周期的平均盈利</b>（第 6 步估值将使用近 5 年均值 EPS {avg5_eps_val:.2f} 元 和 8 年均值 EPS {avg8_eps_val:.2f} 元作为估值参数）。</p>
   </div>
 
-  <!-- 8. 估值预览 -->
+  <!-- 8. 估值预览（市场验证） -->
   <div class="section">
-    <h2>8. 估值预览（简化）</h2>
-    <p class="source">来源：周期平均 EPS × 合理 PE 倍数——正式估值见第 6 步（DCF + 相对价值法 + 并购 + LBO）</p>
+    <h2>8. 估值预览（市场验证框架）</h2>
+    <p class="source">来源：第 6 步估值报告 §4-§5——成熟期市场验证的周期均值PE 公平价值 + PB 峰值模型。正式估值详见估值报告。</p>
     <div class="box-orange">
       <p style="margin:0">{valuation_preview}</p>
     </div>

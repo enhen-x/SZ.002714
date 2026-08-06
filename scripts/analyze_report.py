@@ -165,12 +165,16 @@ PRICE_SCENARIOS={
     "基准":{2025:14.4,2026:10.5,2027:12.5,2028:13.5},
     "下行":{2025:14.4,2026:10.0,2027:11.0,2028:11.5},
 }
-COST_SCENARIOS={"基准":{2025:12.0,2026:11.5,2027:11.3,2028:11.0}}
+COST_SCENARIOS={
+    "上行":{2025:12.0,2026:11.5,2027:11.5,2028:11.3},
+    "基准":{2025:12.0,2026:11.5,2027:11.3,2028:11.0},
+    "下行":{2025:12.0,2026:11.8,2027:11.5,2028:11.3},
+}
 
 def project_ebit_eps(scenario, year):
     hog=HOG_FORECAST.get(year,8500)
     price=PRICE_SCENARIOS[scenario][year]
-    cost=COST_SCENARIOS["基准"][year]
+    cost=COST_SCENARIOS[scenario][year]  # 分情景成本（与 Step 5 财务预测一致）
     hog_rev=hog*AVG_WEIGHT*price/1e4
     total_rev=hog_rev*REV_MULTIPLIER
     hog_cost=hog*AVG_WEIGHT*cost/1e4
@@ -200,44 +204,25 @@ for sc in ["基准","上行","下行"]:
         da=rev*DA_RATE
         FORECAST[sc][yr]={"ebit":ebit,"eps":eps,"revenue":rev,"ebitda":ebit+da}
 
-def peak_fin(pig_price, hog=8600, cost=11.0):
-    hog_rev=hog*AVG_WEIGHT*pig_price/1e4
-    total_rev=hog_rev*REV_MULTIPLIER
-    hog_cost=hog*AVG_WEIGHT*cost/1e4
-    non_hog_rev=total_rev-hog_rev
-    total_cost=hog_cost+non_hog_rev*NON_HOG_COST_RATE
-    gp=total_rev-total_cost
-    se=total_rev*COST_RATES["sale_rate"]/100
-    me=total_rev*COST_RATES["manage_rate"]/100
-    rd=total_rev*COST_RATES["rd_rate"]/100
-    nd=FIN[LATEST]["interest_debt"]*0.65
-    ie=nd*INTEREST_RATE
-    op=gp-se-me-rd-ie; tp=op; ebit=tp+ie
-    tax=tp*TAX_RATE_HIGH if tp>100 else tp*TAX_RATE_LOW; tax=max(tax,0)
-    np_val=tp-tax; pp=np_val*0.98; eps=pp/TOTAL_SHARES
-    return {"eps":eps,"ebit":ebit,"revenue":total_rev,"parent_profit":pp}
-
-# ==================== 同行数据 ====================
-PEERS = [
-    {"name":"牧原股份","eps_cycle":AVG8_EPS,"pb":3.42,"roe":20.6,"cost":11.3,"debt_ratio":54.2,"score":10.2},
-    {"name":"温氏股份","eps_cycle":0.57,"pb":2.87,"roe":12.0,"cost":12.2,"debt_ratio":55.0,"score":6.5},
-    {"name":"新希望","eps_cycle":0.43,"pb":1.72,"roe":5.0,"cost":12.7,"debt_ratio":72.0,"score":2.5},
-    {"name":"正邦科技","eps_cycle":-0.5,"pb":2.19,"roe":-15.0,"cost":13.3,"debt_ratio":85.0,"score":0.0},
-    {"name":"神农集团","eps_cycle":0.62,"pb":3.19,"roe":15.0,"cost":12.5,"debt_ratio":35.0,"score":6.0},
-]
-
 # ==================== 估值参数 ====================
-WACC=8.5; TERMINAL_G=2.0
-DCF_VAL={"low":40,"mid":50,"high":63}
-PE_TARGET={"low":15,"mid":19,"high":22}
-RELATIVE_VAL={"low":AVG8_EPS*PE_TARGET["low"],"mid":AVG8_EPS*PE_TARGET["mid"],"high":AVG8_EPS*PE_TARGET["high"]}
-MA_VAL={"low":18,"mid":27,"high":36}
-LBO_VAL={"low":16,"mid":20,"high":25}
-WEIGHTS={"dcf":0.20,"relative":0.60,"ma":0.10,"lbo":0.10}
-WEIGHTED_LOW=DCF_VAL["low"]*0.2+RELATIVE_VAL["low"]*0.6+MA_VAL["low"]*0.1+LBO_VAL["low"]*0.1
-WEIGHTED_MID=DCF_VAL["mid"]*0.2+RELATIVE_VAL["mid"]*0.6+MA_VAL["mid"]*0.1+LBO_VAL["mid"]*0.1
-WEIGHTED_HIGH=DCF_VAL["high"]*0.2+RELATIVE_VAL["high"]*0.6+MA_VAL["high"]*0.1+LBO_VAL["high"]*0.1
-PEAK_PE_LOW,PEAK_PE_MID,PEAK_PE_HIGH=10,14,16
+# 市场验证框架（来自第 6 步估值报告 §4-§5，旧四方法加权已删除）
+# 成熟期（2022+，56个月）周期均值PE 分布：P25/P50/P75 = 21.1/23.9/26.4
+FAIR_PE={"p25":21.1,"p50":23.9,"p75":26.4}
+FAIR_VALUE={"low":AVG8_EPS*FAIR_PE["p25"],"mid":AVG8_EPS*FAIR_PE["p50"],"high":AVG8_EPS*FAIR_PE["p75"]}
+# 峰值主模型：PB 3.9-4.3×（2025 成熟期峰值实测 4.25×）× 2028E BPS
+PEAK_PB_LO,PEAK_PB_HI=3.9,4.3
+
+# ── 2028E 峰值预测基础数据 ──
+_qf_bps=pd.read_csv(ROOT/"data"/"主要财务指标_按单季度.csv",dtype=str)
+_qf_bps["REPORT_DATE"]=pd.to_datetime(_qf_bps["REPORT_DATE"])
+_qf_bps["BPS"]=pd.to_numeric(_qf_bps["BPS"],errors="coerce")
+_q4=_qf_bps[_qf_bps["REPORT_DATE"].dt.month==12].sort_values("REPORT_DATE")
+BPS_2025=float(_q4[_q4["REPORT_DATE"].dt.year==2025]["BPS"].iloc[0])
+PEAK_BPS={sc:BPS_2025+sum(FORECAST[sc][yr]["eps"] for yr in [2026,2027,2028]) for sc in ["上行","基准","下行"]}
+PEAK_PRICE={sc:(PEAK_BPS[sc]*PEAK_PB_LO,PEAK_BPS[sc]*PEAK_PB_HI) for sc in ["上行","基准","下行"]}
+# 2028E 周期均值 EPS（滚动8年 2021-2028）
+_hist_eps=[FIN[yr]["eps"] for yr in [2021,2022,2023,2024,2025]]
+PEAK_CYC_EPS={sc:(sum(_hist_eps)+sum(FORECAST[sc][yr]["eps"] for yr in [2026,2027,2028]))/8 for sc in ["上行","基准","下行"]}
 
 # ==================== 敏感性矩阵 ====================
 # 基于视频"边际成本定价"框架：猪价×出栏量×成本 → 净利润敏感性
@@ -328,26 +313,6 @@ def ch1_revenue_profit():
     fig.add_hline(y=0,line_dash="solid",line_color="#ccc",line_width=1,secondary_y=True)
     return fig
 
-def ch2_peer_compare():
-    """图表2: 同行估值对比"""
-    names=[p["name"] for p in PEERS]
-    colors=[C["midblue"]]+[C["gray"]]*4
-    # 周期PE
-    cycle_pes=[CURRENT_PRICE/AVG8_EPS if p["name"]=="牧原股份" else
-               (CURRENT_PRICE/p["eps_cycle"] if p["eps_cycle"]>0 else 0) for p in PEERS]
-    cycle_pes_text=[f"{v:.1f}" for v in cycle_pes]
-    fig=make_subplots(rows=1,cols=3,subplot_titles=["周期PE（8Y均值EPS）","市净率 P/B","ROE %"])
-    fig.add_trace(go.Bar(x=names,y=cycle_pes,marker_color=colors,text=cycle_pes_text,textfont_size=10,
-        textposition="outside",showlegend=False),row=1,col=1)
-    fig.add_trace(go.Bar(x=names,y=[p["pb"] for p in PEERS],marker_color=colors,
-        text=[f"{p['pb']:.2f}" for p in PEERS],textfont_size=10,textposition="outside",showlegend=False),row=1,col=2)
-    fig.add_trace(go.Bar(x=names,y=[p["roe"] for p in PEERS],marker_color=colors,
-        text=[f"{p['roe']:.1f}" for p in PEERS],textfont_size=10,textposition="outside",showlegend=False),row=1,col=3)
-    fig.update_layout(template=PLOTLY_TEMPLATE,title=dict(text="可比公司对比（牧原=深色）",x=0.02,y=0.98,font_size=14),
-        font=dict(family="Microsoft YaHei,PingFang SC,sans-serif",size=11,color="#1a1a1a"),
-        height=350,margin=dict(l=40,r=20,t=80,b=60))
-    return fig
-
 def ch3_scenario_eps():
     """图表3: 三情景EPS预测 — 分组柱状图（视频研究建议：峰值PE取10-14x，预期管理）"""
     # 2025 实际 EPS（从财务数据直接取，不用模型算的 2.98）
@@ -393,20 +358,24 @@ def ch3_scenario_eps():
     return fig
 
 def ch4_valuation_summary():
-    """图表4: 估值汇总表"""
-    methods=["DCF 内在价值","相对价值 (PE)","并购价值","LBO","加权结果"]
-    weights=["20%","60%","10%","10%","100%"]
-    lows=[DCF_VAL["low"],RELATIVE_VAL["low"],MA_VAL["low"],LBO_VAL["low"],WEIGHTED_LOW]
-    mids=[DCF_VAL["mid"],RELATIVE_VAL["mid"],MA_VAL["mid"],LBO_VAL["mid"],WEIGHTED_MID]
-    highs=[DCF_VAL["high"],RELATIVE_VAL["high"],MA_VAL["high"],LBO_VAL["high"],WEIGHTED_HIGH]
-    notes=["WACC=8.5% g=2.0%",f"周期EPS {AVG8_EPS:.2f}×PE 15-22×","EV/EBITDA 6-10×","Entry 5.5-7.5×EBITDA","安全边际 ±15%"]
+    """图表4: 市场验证估值汇总表（公平价值 + 2028 峰值预测）"""
+    rows = [
+        ["公平价值（周期均值PE）", f"AVG8_EPS {AVG8_EPS:.2f} × 成熟期PE {FAIR_PE['p25']:.1f}-{FAIR_PE['p75']:.1f}×",
+         f"{FAIR_VALUE['low']:.0f}", f"{FAIR_VALUE['mid']:.0f}", f"{FAIR_VALUE['high']:.0f}"],
+        ["2028 峰值·基准（PB模型）", f"BPS {PEAK_BPS['基准']:.1f} × PB {PEAK_PB_LO}-{PEAK_PB_HI}×",
+         f"{PEAK_PRICE['基准'][0]:.0f}", f"{(PEAK_PRICE['基准'][0]+PEAK_PRICE['基准'][1])/2:.0f}", f"{PEAK_PRICE['基准'][1]:.0f}"],
+        ["2028 峰值·上行（PB模型）", f"BPS {PEAK_BPS['上行']:.1f} × PB {PEAK_PB_LO}-{PEAK_PB_HI}×",
+         f"{PEAK_PRICE['上行'][0]:.0f}", f"{(PEAK_PRICE['上行'][0]+PEAK_PRICE['上行'][1])/2:.0f}", f"{PEAK_PRICE['上行'][1]:.0f}"],
+        ["2028 峰值·基准（周期PE交叉）", f"周期EPS {PEAK_CYC_EPS['基准']:.2f} × 23.8-25.8×",
+         f"{PEAK_CYC_EPS['基准']*23.8:.0f}", f"{PEAK_CYC_EPS['基准']*24.8:.0f}", f"{PEAK_CYC_EPS['基准']*25.8:.0f}"],
+    ]
     fig=go.Figure(data=[go.Table(
-        header=dict(values=["<b>估值方法</b>","<b>权重</b>","<b>低估</b>","<b>合理</b>","<b>高估</b>","<b>核心参数</b>"],
+        header=dict(values=["<b>估值口径</b>","<b>核心参数</b>","<b>保守</b>","<b>中枢</b>","<b>乐观</b>"],
             fill_color=C["dark"],font=dict(color="white",size=12),height=34,align="center"),
-        cells=dict(values=[methods,weights,[f"{v:.0f}" for v in lows],[f"{v:.0f}" for v in mids],[f"{v:.0f}" for v in highs],notes],
+        cells=dict(values=list(zip(*rows)),
             fill_color=[["white","#f8f9fa","#f8f9fa","#f8f9fa","#f0f4f8"]],
             font=dict(color="#1a1a1a",size=11),height=30,align="center"))])
-    fig.update_layout(title=dict(text="估值汇总表",x=0.02,y=0.98,font_size=14),
+    fig.update_layout(title=dict(text="市场验证估值汇总表（公平价值 + 2028 峰值预测）",x=0.02,y=0.98,font_size=14),
         font=dict(family="Microsoft YaHei,PingFang SC,sans-serif",size=11,color="#1a1a1a"),
         height=250,margin=dict(l=10,r=10,t=60,b=10))
     return fig
@@ -419,7 +388,8 @@ def ch5_pe_band():
         hp=HIST_PE[yr]
         if hp["is_loss"] or hp["pe"] is None: actual_pe.append(None)
         else: actual_pe.append(max(0.5,min(hp["pe"],80)))
-    pe_lo,pe_mid,pe_hi=8,15,30
+    # 成熟期市场验证分布（2022+，56个月）：P10/P50/P90 = 19.1/23.9/29.3
+    pe_lo,pe_mid,pe_hi=19,24,29
     x_left,x_right=hist_yrs[0]-0.5,hist_yrs[-1]+0.5
     fig=go.Figure()
     for y0,y1,color in [(0,pe_lo,"rgba(39,174,96,0.10)"),(pe_lo,pe_mid,"rgba(52,152,219,0.06)"),
@@ -456,56 +426,29 @@ def ch5_pe_band():
         margin=dict(l=55,r=35,t=80,b=60),hovermode="x unified")
     return fig
 
-def ch6_cycle_peak():
-    """图表6: 周期高峰股价潜力"""
-    pig_prices=[13,14,15,16,18,20,22,24,26,28]
-    pps=[]; lows=[]; mids=[]; highs=[]
-    for pp in pig_prices:
-        fin=peak_fin(pp)
-        pps.append(fin["eps"])
-        lows.append(fin["eps"]*PEAK_PE_LOW)
-        mids.append(fin["eps"]*PEAK_PE_MID)
-        highs.append(fin["eps"]*PEAK_PE_HIGH)
+def ch7_peak_scenarios():
+    """图表7: 2028E 周期峰值预测 — 市场验证 PB 模型"""
+    labels=["上行","基准","下行"]
+    mids=[(PEAK_PRICE[sc][0]+PEAK_PRICE[sc][1])/2 for sc in labels]
+    los=[PEAK_PRICE[sc][0] for sc in labels]
+    his=[PEAK_PRICE[sc][1] for sc in labels]
+    cyc_hi=[PEAK_CYC_EPS[sc]*25.8 for sc in labels]  # 周期PE峰值上限交叉（2025实测25.8×）
     fig=go.Figure()
-    fig.add_trace(go.Scatter(x=pig_prices,y=highs,mode="lines",line=dict(color=C["green"],width=1,dash="dot"),
-        fill="tonexty",fillcolor="rgba(39,174,96,0.08)",name=f"高PE={PEAK_PE_HIGH}×"))
-    fig.add_trace(go.Scatter(x=pig_prices,y=mids,mode="lines",line=dict(color=C["midblue"],width=2.5),
-        fill="tonexty",fillcolor="rgba(41,128,185,0.10)",name=f"中PE={PEAK_PE_MID}×"))
-    fig.add_trace(go.Scatter(x=pig_prices,y=lows,mode="lines",line=dict(color=C["orange"],width=1,dash="dash"),
-        fill="tonexty",fillcolor="rgba(230,126,34,0.06)",name=f"低PE={PEAK_PE_LOW}×"))
-    # Current price reference
-    fig.add_hline(y=CURRENT_PRICE,line_dash="dash",line_color=C["dark"],
-        annotation=dict(text=f"当前股价 {CURRENT_PRICE}元",font_size=10))
-    # Common peak zone
-    fig.add_vrect(x0=15,x1=20,fillcolor="rgba(0,0,0,0.03)",line_width=0,
-        annotation=dict(text="历史常见<br>温和高峰区",font_size=9))
-    fig.update_layout(template=PLOTLY_TEMPLATE,
-        title=dict(text="周期高峰股价潜力 — 猪价 × 峰值PE",x=0.02,y=0.98,font_size=14),
-        font=dict(family="Microsoft YaHei,PingFang SC,sans-serif",size=11,color="#1a1a1a"),
-        xaxis_title="峰值年猪价（元/kg）",yaxis_title="潜在股价（元）",
-        height=400,margin=dict(l=55,r=30,t=80,b=60),hovermode="x unified",
-        legend=dict(orientation="h",yanchor="bottom",y=1.05))
-    return fig
-
-def ch7_weight_bridge():
-    """图表7: 估值桥 — 四种方法加权"""
-    methods_short=["DCF (20%)","相对价值 (60%)","并购 (10%)","LBO (10%)","加权结果"]
-    mid_vals=[DCF_VAL["mid"],RELATIVE_VAL["mid"],MA_VAL["mid"],LBO_VAL["mid"],WEIGHTED_MID]
-    low_vals=[DCF_VAL["low"],RELATIVE_VAL["low"],MA_VAL["low"],LBO_VAL["low"],WEIGHTED_LOW]
-    high_vals=[DCF_VAL["high"],RELATIVE_VAL["high"],MA_VAL["high"],LBO_VAL["high"],WEIGHTED_HIGH]
-    colors_m=["#2980b9","#2980b9","#7f8c8d","#7f8c8d","#c0392b"]
-    fig=go.Figure()
-    for i,(m,l,h,c) in enumerate(zip(mid_vals,low_vals,high_vals,colors_m)):
-        fig.add_trace(go.Bar(x=[methods_short[i]],y=[m],marker_color=c,opacity=0.9,
-            error_y=dict(type="data",symmetric=False,array=[h-m],arrayminus=[m-l],color="#888",thickness=1.5,width=0.3),
-            text=f"{m:.0f}",textfont_size=12,textposition="outside"))
+    fig.add_trace(go.Bar(x=labels,y=mids,name="PB峰值模型（3.9-4.3×）",marker_color=C["midblue"],
+        error_y=dict(type="data",symmetric=False,array=[h-m for m,h in zip(mids,his)],
+                     arrayminus=[m-l for m,l in zip(mids,los)],color="#888",thickness=1.5,width=0.3),
+        text=[f"{v:.0f}" for v in mids],textfont_size=12,textposition="outside"))
+    fig.add_trace(go.Scatter(x=labels,y=cyc_hi,mode="markers",name="周期PE峰值交叉（25.8×）",
+        marker=dict(color=C["orange"],size=10,symbol="diamond")))
     fig.add_hline(y=CURRENT_PRICE,line_dash="dash",line_color=C["red"],
         annotation=dict(text=f"当前股价 {CURRENT_PRICE}元",font_size=10,font_color=C["red"]))
+    fig.add_hrect(y0=FAIR_VALUE["low"],y1=FAIR_VALUE["high"],fillcolor="rgba(46,204,113,0.08)",
+        line_width=0,annotation=dict(text=f"公平价值带 {FAIR_VALUE['low']:.0f}-{FAIR_VALUE['high']:.0f}元",font_size=10))
     fig.update_layout(template=PLOTLY_TEMPLATE,
-        title=dict(text="估值桥 — 四种方法加权 → 目标价区间",x=0.02,y=0.98,font_size=14),
+        title=dict(text="2028E 周期峰值股价预测 — 市场验证 PB 模型",x=0.02,y=0.98,font_size=14),
         font=dict(family="Microsoft YaHei,PingFang SC,sans-serif",size=11,color="#1a1a1a"),
-        yaxis_title="每股价值（元）",height=380,margin=dict(l=55,r=30,t=80,b=60),
-        showlegend=False)
+        yaxis_title="峰值股价（元）",height=400,margin=dict(l=55,r=30,t=80,b=60),
+        legend=dict(orientation="h",yanchor="bottom",y=1.05))
     return fig
 
 
@@ -523,13 +466,7 @@ for sc in ["上行","基准","下行"]:
         eps_str=f"<td style='font-weight:600'>{f['eps']:.2f}</td>"
         if f['eps']<0: eps_str=f"<td style='color:#c0392b;font-weight:600'>{f['eps']:.2f}</td>"
         elif f['eps']>2: eps_str=f"<td style='color:#27ae60;font-weight:600'>{f['eps']:.2f}</td>"
-        scenario_rows+=f"<tr><td>{sc_label}</td><td>{yr}E</td><td>{HOG_FORECAST.get(yr,'—')}万</td><td>{PRICE_SCENARIOS[sc][yr]}</td><td>{COST_SCENARIOS['基准'][yr]}</td><td>{f['revenue']:.0f}</td>{eps_str}</tr>"
-
-# Build peer ranking table
-peer_rows=""
-for i,p in enumerate(PEERS):
-    rank_style="font-weight:700;color:#2980b9" if i==0 else ""
-    peer_rows+=f"<tr><td>{i+1}</td><td style='{rank_style}'>{p['name']}</td><td>{p['score']:.1f}</td><td>{p['roe']:.1f}%</td><td>{p['cost']}</td><td>{p['debt_ratio']:.0f}%</td></tr>"
+        scenario_rows+=f"<tr><td>{sc_label}</td><td>{yr}E</td><td>{HOG_FORECAST.get(yr,'—')}万</td><td>{PRICE_SCENARIOS[sc][yr]}</td><td>{COST_SCENARIOS[sc][yr]}</td><td>{f['revenue']:.0f}</td>{eps_str}</tr>"
 
 # Build risk matrix
 risks_html="""<tr><td>猪价持续低迷</td><td style='color:#c0392b'>高</td><td>30%</td><td>去产能受阻、需求疲软，集团场硬扛不退</td><td>严控仓位、分批建仓，跟踪能繁月度变化</td></tr>
@@ -555,22 +492,24 @@ macro_cards_html = "".join(
     f'<div class="card"><div class="label">{label}</div><b>{val}</b><span class="unit">{unit}</span></div>'
     for label, val, unit in MACRO_CARDS)
 
-# Peak scenarios
-peak_rows = ""
-for pp in [14,16,18,20,22,24]:
-    fin=peak_fin(pp)
-    lo=fin["eps"]*PEAK_PE_LOW; mi=fin["eps"]*PEAK_PE_MID; hi=fin["eps"]*PEAK_PE_HIGH
-    peak_rows+=f"<tr><td>{pp} 元/kg</td><td>{fin['eps']:.2f}</td><td>{lo:.0f} 元</td><td>{mi:.0f} 元</td><td>{hi:.0f} 元</td></tr>"
+# 2028 峰值情景表（市场验证 PB 主模型 + 交叉验证）
+peak_scen_rows = ""
+for sc in ["上行", "基准", "下行"]:
+    lo, hi = PEAK_PRICE[sc]
+    cyc_lo = PEAK_CYC_EPS[sc] * 23.8
+    cyc_hi = PEAK_CYC_EPS[sc] * 25.8
+    peak_scen_rows += (f"<tr><td><b>{sc}</b></td><td>{FORECAST[sc][2028]['eps']:.2f}</td>"
+                       f"<td>{PEAK_BPS[sc]:.2f}</td><td>{PEAK_CYC_EPS[sc]:.2f}</td>"
+                       f"<td style='font-weight:600'>{lo:.0f}-{hi:.0f}</td>"
+                       f"<td>{cyc_lo:.0f}-{cyc_hi:.0f}</td></tr>")
 
 # Charts dict
 charts = {
     "ch1": ch1_revenue_profit(),
-    "ch2": ch2_peer_compare(),
     "ch3": ch3_scenario_eps(),
     "ch4": ch4_valuation_summary(),
     "ch5": ch5_pe_band(),
-    "ch6": ch6_cycle_peak(),
-    "ch7": ch7_weight_bridge(),
+    "ch7": ch7_peak_scenarios(),
     "ch8": ch8_sensitivity(),
 }
 
@@ -636,28 +575,28 @@ th{{font-weight:500;color:#888;font-size:12px;letter-spacing:.3px}}
     <p style="margin:0">
       <b>投资建议：<span style="font-size:18px;color:#27ae60">增持</span></b> &nbsp;|&nbsp;
       <b>当前股价：<span style="font-size:18px">{CURRENT_PRICE} 元</span></b>（{TODAY_STR}）&nbsp;|&nbsp;
-      <b>12个月目标价：<span style="font-size:18px;color:#2980b9">42 – 49 元</span></b>&nbsp;|&nbsp;
-      <b>潜在上涨：<span style="color:#27ae60">+7% – +25%</span></b>
+      <b>12个月目标价：<span style="font-size:18px;color:#2980b9">43 – 54 元</span></b>&nbsp;|&nbsp;
+      <b>潜在上涨：<span style="color:#27ae60">+9% – +37%</span></b>
     </p>
   </div>
 
   <h3>估值摘要</h3>
-  <p>采用周期型公司估值方法论（胡克框架），使用<b>完整周期平均盈利</b>（非当年利润），四种方法交叉验证：</p>
+  <p>采用<b>市场验证</b>的周期型公司估值框架（第 6 步估值报告 §4-§5）：完整周期平均盈利 × 成熟期市场实测倍数。旧四方法加权（DCF/相对/并购/LBO）未经市场检验，已删除。</p>
   <table>
-    <tr><th>估值方法</th><th>权重</th><th>低估</th><th>合理</th><th>高估</th><th>核心参数</th></tr>
-    <tr><td>DCF 内在价值法</td><td>20%</td><td>{fmt_val(DCF_VAL['low'])} 元</td><td style='font-weight:600'>{fmt_val(DCF_VAL['mid'])} 元</td><td>{fmt_val(DCF_VAL['high'])} 元</td><td style='font-size:12px;color:#888'>WACC 8.5%, g=2.0%</td></tr>
-    <tr><td>相对价值法 (PE)</td><td>60%</td><td>{fmt_val(RELATIVE_VAL['low'])} 元</td><td style='font-weight:600'>{fmt_val(RELATIVE_VAL['mid'])} 元</td><td>{fmt_val(RELATIVE_VAL['high'])} 元</td><td style='font-size:12px;color:#888'>周期EPS {AVG8_EPS:.2f} × PE {PE_TARGET['low']}-{PE_TARGET['high']}×</td></tr>
-    <tr><td>并购价值法</td><td>10%</td><td>{fmt_val(MA_VAL['low'])} 元</td><td style='font-weight:600'>{fmt_val(MA_VAL['mid'])} 元</td><td>{fmt_val(MA_VAL['high'])} 元</td><td style='font-size:12px;color:#888'>EV/EBITDA 6-10×</td></tr>
-    <tr><td>LBO 法</td><td>10%</td><td>{fmt_val(LBO_VAL['low'])} 元</td><td style='font-weight:600'>{fmt_val(LBO_VAL['mid'])} 元</td><td>{fmt_val(LBO_VAL['high'])} 元</td><td style='font-size:12px;color:#888'>5.5-7.5× EBITDA</td></tr>
-    <tr style='background:#f0f4f8'><td><b>加权结果</b></td><td><b>100%</b></td><td><b>{fmt_val(WEIGHTED_LOW)} 元</b></td><td style='font-weight:700;font-size:16px'>{fmt_val(WEIGHTED_MID)} 元</td><td><b>{fmt_val(WEIGHTED_HIGH)} 元</b></td><td style='font-size:12px;color:#888'>安全边际 ±15%: {fmt_val(WEIGHTED_MID*0.85)}-{fmt_val(WEIGHTED_MID*1.15)} 元</td></tr>
+    <tr><th>估值口径</th><th>核心参数</th><th>保守</th><th>中枢</th><th>乐观</th></tr>
+    <tr><td>公平价值（周期均值PE）</td><td>AVG8_EPS {AVG8_EPS:.2f} × 成熟期PE {FAIR_PE['p25']:.1f}-{FAIR_PE['p75']:.1f}×</td><td>{fmt_val(FAIR_VALUE['low'])} 元</td><td style='font-weight:600'>{fmt_val(FAIR_VALUE['mid'])} 元</td><td>{fmt_val(FAIR_VALUE['high'])} 元</td></tr>
+    <tr><td>2028 峰值·基准（PB模型）</td><td>BPS {PEAK_BPS['基准']:.1f} × PB {PEAK_PB_LO}-{PEAK_PB_HI}×</td><td>{fmt_val(PEAK_PRICE['基准'][0])} 元</td><td style='font-weight:600'>{fmt_val((PEAK_PRICE['基准'][0]+PEAK_PRICE['基准'][1])/2)} 元</td><td>{fmt_val(PEAK_PRICE['基准'][1])} 元</td></tr>
+    <tr><td>2028 峰值·上行（PB模型）</td><td>BPS {PEAK_BPS['上行']:.1f} × PB {PEAK_PB_LO}-{PEAK_PB_HI}×</td><td>{fmt_val(PEAK_PRICE['上行'][0])} 元</td><td style='font-weight:600'>{fmt_val((PEAK_PRICE['上行'][0]+PEAK_PRICE['上行'][1])/2)} 元</td><td>{fmt_val(PEAK_PRICE['上行'][1])} 元</td></tr>
+    <tr style='background:#f0f4f8'><td><b>交叉验证</b></td><td colspan='4'>周期PE 峰值 23.8-25.8× → 基准 36-39 元（下限）｜ 视频峰值利润法 60-100 元（区间参照，不用于计算）</td></tr>
   </table>
+  <p style="font-size:12px;color:#888">当前价格 {CURRENT_PRICE} 元 &lt; 公平价值下沿 {fmt_val(FAIR_VALUE['low'])} 元 → 处于成熟期估值分布最低十分位，安全边际充分。</p>
 
   <h3>核心论点</h3>
   <ol>
     <li><b>成本护城河持续加深</b>：完全成本 2025 年末 11.3 元/kg、2026Q2 约 11.6 元/kg，为上市猪企最低，较行业平均低 1-2 元/kg——在周期低谷意味着比别人少亏、比别人多活。现金成本仅约 7.3-7.4 元/kg（扣除折旧），当前猪价 10.5 元仍高于现金成本 → 牧原不亏现金，可以硬扛。</li>
     <li><b>周期低谷已近底部</b>：能繁母猪 3780 万头（正常保有量 100.8%），产能去化加速（Q2 -3.2%）。猪粮比 4.41 处于重度亏损区间（<5:1），行业性亏损不可能无限持续。淘汰母猪折价率约 60%（vs 深度去化阈值 50%），去化仍在进行中。</li>
-    <li><b>当前估值处于 2021 年以来最具吸引力的区间</b>：周期 PE 仅 19.3×，低于 2021 年以来任何低谷水平（最低 20.6×）。"模型合理 + 市场便宜"交汇。</li>
-    <li><b>周期高峰期权价值显著</b>：若猪价回升至 16-18 元/kg（历史常见温和高峰），按峰值 PE 14×，股价可达 106-150 元（+170%~280%）。</li>
+    <li><b>当前估值处于成熟期最低十分位</b>：周期 PE 19.3×（≈成熟期 P10 19.1×），市场验证的公平价值带 43-54 元，当前 39.3 元低于下沿——"模型合理 + 市场便宜"交汇。</li>
+    <li><b>周期高峰期权价值显著</b>：市场验证的 PB 峰值模型（3.9-4.3×）显示 2028 周期峰值基准情景 66-73 元（+68%~+85%）、上行情景 87-96 元（+121%~+144%）。</li>
     <li><b>财务安全垫充足</b>：经营现金流 301 亿（2025），利息覆盖 7.2 倍，有息负债进入去杠杆通道——能安然度过周期底部。</li>
   </ol>
 
@@ -893,76 +832,57 @@ th{{font-weight:500;color:#888;font-size:12px;letter-spacing:.3px}}
 <div class="section">
   <h2>七、评估方法的运用</h2>
 
-  <h3>7.1 内在价值法 — DCF（权重 20%）</h3>
-  <p>两阶段 DCF 模型：5 年显式预测（2026E-2030E）+ 终值（50% 永续增长 + 50% 退出乘数）。</p>
+  <h3>7.1 估值模型选择 — 成熟期市场验证（第 6 步估值报告 §4）</h3>
+  <p>用成熟期（2022-01 至今，56 个月）真实市场数据对比四种候选模型，选出市场实际使用的估值锚。旧框架的 DCF/相对价值/并购/LBO 加权法未经市场检验，已全部弃用：</p>
   <table>
-    <tr><th>参数</th><th>值</th><th>说明</th></tr>
-    <tr><td>WACC (CAPM)</td><td>8.5%</td><td>Rf=2.5%, β=1.1, ERP=8% → Ke=11.3%, D/E=35% → WACC=8.5%</td></tr>
-    <tr><td>WACC (积层法)</td><td>8.6%</td><td>Rf+ERP+行业风险(-0.5%)+规模风险(0%)+公司特定(+1.5%) = 11.5%, D/E=35%</td></tr>
-    <tr><td>永续增长率</td><td>2.0%</td><td>保守假设（低于 GDP 增速）</td></tr>
-    <tr><td>退出乘数</td><td>10× EBIT</td><td>行业正常化倍数</td></tr>
-    <tr><td style='color:#2980b9'><b>DCF 每股价值</b></td><td style='color:#2980b9;font-weight:600'><b>50 元</b></td><td>企业价值 3,255 亿 − 有息负债 496 亿 = 2,759 亿 ÷ 54.7 亿股</td></tr>
+    <tr><th>候选模型</th><th>成熟期分布（P25-P75）</th><th>稳定性 IQR/中位</th><th>拟合误差 MAD</th><th>全程可定义</th><th>判定</th></tr>
+    <tr><td>周期均值PE（股价/8Y均值EPS）</td><td>21.1-26.4×</td><td>0.19-0.22</td><td>8.7-11.9%</td><td>✅</td><td style='font-weight:600'>公平价值主模型</td></tr>
+    <tr><td>PB（股价/BPS）</td><td>3.1-3.9×</td><td>0.23-0.24</td><td>10.5-12.0%</td><td>✅</td><td style='font-weight:600'>峰值预测主模型</td></tr>
+    <tr><td>PS（市值/TTM营收）</td><td>1.7-2.1×</td><td>0.22</td><td>11.3%</td><td>✅</td><td>旁证</td></tr>
+    <tr><td>PE(TTM)</td><td>盈利期 12.5-21.3×</td><td>4.25</td><td>亏损期无定义</td><td>❌</td><td style='color:#c0392b'>否决</td></tr>
   </table>
 
-  <h3>7.2 相对价值法（权重 60%）</h3>
-  <p>使用周期平均盈利（8Y EPS = {AVG8_EPS:.2f} 元），而非当年利润。可比公司按 ROE/成本/规模/负债排名：</p>
-  {chart_div("ch2", charts["ch2"])}
-  <table>
-    <tr><th>排名</th><th>公司</th><th>综合得分</th><th>ROE %</th><th>成本(元/kg)</th><th>负债率 %</th></tr>
-    {peer_rows}
-  </table>
+  <h3>7.2 公平价值 — 周期均值PE（市场验证）</h3>
+  <p>使用完整周期平均盈利（8Y EPS = {AVG8_EPS:.2f} 元），而非当年利润——周期型公司估值的基本纪律：</p>
   <div class="box">
-    <p style="margin:0"><b>牧原排名第一</b>（综合得分 10.2，第二名温氏 6.5），核心驱动力是成本领先 + 规模效应 + ROE 优势。<br>
-    目标 PE 15-22× 周期 EPS：下限 15×（周期低谷保护）、中值 19×（行业龙头溢价+成本护城河）、上限 22×（温和周期回归）。<br>
-    当前周期 PE = 19.3×，处于目标区间中位——<b>相对估值显示当前价格基本合理</b>。</p>
+    <p style="margin:0"><b>市场验证的公平价值（成熟期 2022+，56 个月实测）：</b><br>
+    成熟期市场对牧原周期均值 PE 的实际支付区间：P25-P75 = 21.1-26.4×（P50 23.9×、P10-P90 19.1-29.3×）——旧假设 15-22× 与视频的 12-16× 均低于市场真实水平，已弃用。<br>
+    公平价值 = AVG8_EPS {AVG8_EPS:.2f} × 21.1-26.4× = <b>{fmt_val(FAIR_VALUE['low'])}-{fmt_val(FAIR_VALUE['high'])} 元</b>（中枢 {fmt_val(FAIR_VALUE['mid'])} 元）。<br>
+    当前周期 PE = 19.3× ≈ 成熟期 P10（19.1×）——<b>当前价格处于成熟期估值分布最低十分位，低于公平价值下沿</b>。</p>
   </div>
 
   <h3>7.3 PE Band 历史估值区间</h3>
   {chart_div("ch5", charts["ch5"])}
-  <p>2023 年（亏损年份）PE 无意义（折线断开）。当前周期 PE=19.3×——在历史 PE Band 中处于<b>中等偏低</b>位置。</p>
+  <p>2023 年（亏损年份）PE 无意义（折线断开）。当前周期 PE=19.3×——处于成熟期分布<b>最低十分位（P10≈19.1×）</b>。</p>
 
-  <h3>7.4 并购价值法（权重 10%）+ LBO 法（权重 10%）</h3>
-  <div class="col2">
-    <div>
-      <p><b>并购价值</b>：行业 M&A EV/EBITDA 6-10×，应用于牧原周期 EBITDA（~250 亿）：</p>
-      <ul>
-        <li>低估：6× → EV 1,500 亿 → ~{fmt_val(MA_VAL['low'])} 元/股</li>
-        <li>合理：8× → EV 2,000 亿 → ~{fmt_val(MA_VAL['mid'])} 元/股</li>
-        <li>高估：10× → EV 2,500 亿 → ~{fmt_val(MA_VAL['high'])} 元/股</li>
-      </ul>
-    </div>
-    <div>
-      <p><b>LBO</b>：5× EBITDA 杠杆收购，5 年后 8× 退出，IRR=15-20%：</p>
-      <ul>
-        <li>低估：7.5× → ~{fmt_val(LBO_VAL['high'])} 元/股</li>
-        <li>合理：6.5× → ~{fmt_val(LBO_VAL['mid'])} 元/股</li>
-        <li>高估：5.5× → ~{fmt_val(LBO_VAL['low'])} 元/股</li>
-      </ul>
-    </div>
+  <h3>7.4 交叉验证（不重新计算，仅参照）</h3>
+  <div class="box">
+    <p style="margin:0"><b>① 周期PE 峰值（市场验证下限）</b>：2028E 周期均值 EPS × 23.8-25.8×（2025 峰值实测）→ 基准 36-39 元、上行 52-56 元——因 8 年窗口吞入 2026 年创纪录亏损而偏低，仅作下限参照。<br>
+    <b>② 视频峰值利润法（60-100 元）</b>：与本项目 PB 峰值预测（66-96 元）区间基本一致，但其"峰值 EPS × PE"存在双重周期化问题、倍数未经市场校准，仅作定性参照，不用于本项目计算。<br>
+    <b>③ 峰值 EPS × PE 模型已否决</b>：周期股峰值盈利对应的 PE 天然被压缩（2025 峰值 trailing PE 仅 21×），且上行情景隐含 ROE 28% 超成熟期历史（20-25%），该口径会系统性高估。</p>
   </div>
 
-  <h3>7.5 估值汇总</h3>
-  {chart_div("ch7", charts["ch7"])}
+  <h3>7.5 市场验证估值汇总</h3>
   {chart_div("ch4", charts["ch4"])}
 
-  <h3>7.6 周期高峰估值（可选价值）</h3>
-  <p>以上估值基于"周期均值"——假设猪价回归历史中枢。如果周期进入上行高峰，股价有显著上行潜力：</p>
-  {chart_div("ch6", charts["ch6"])}
+  <h3>7.6 周期高峰估值 — 2028 峰值预测（市场验证）</h3>
+  <p>公平价值回答"现在值多少钱"，峰值预测回答"周期反转后能涨到多少"。<b>主模型：PB × 成熟期峰值倍数（3.9-4.3×，校准自 2025 年峰值实测 4.25×）</b>，作用于财务预测滚动出的 2028E BPS。</p>
   <table>
-    <tr><th>峰值年猪价</th><th>峰值 EPS（元）</th><th>低 PE={PEAK_PE_LOW}×</th><th>中 PE={PEAK_PE_MID}×</th><th>高 PE={PEAK_PE_HIGH}×</th></tr>
-    {peak_rows}
+    <tr><th>情景</th><th>2028E EPS</th><th>2028E BPS</th><th>2028E 周期EPS(8Y)</th><th>PB峰值价（主）</th><th>周期PE峰值交叉（下限）</th></tr>
+    {peak_scen_rows}
   </table>
-  <p style="font-size:12px;color:#999">峰值 PE 推导：历史 2020 年高峰 PE=18.8× → 经周期压缩后取 10-16×（三重交叉验证）。出栏 8600 万头，成本 11.0 元/kg。历史常见温和高峰猪价区间 15-20 元/kg。</p>
+  {chart_div("ch7", charts["ch7"])}
+  <p style="font-size:12px;color:#888">PB 峰值模型：2025 年成熟期峰值实测 PB 4.25×（年度高点 59.68/BPS 14.04）与 3.96×（2025-08 月度收盘 55.0/BPS 13.89）→ 取 3.9-4.3×。周期PE 峰值交叉 = 2028E 周期均值 EPS × 23.8-25.8×。</p>
 
   <h3>7.7 历史低谷 PE 验证</h3>
   <div class="box-red">
     <p style="margin:0">
-      <b>三重交叉验证结论：</b><br>
-      ① 加权模型合理值 38 元 → 当前 39.3 元 = <b>模型合理（+3%），市场未明显低估</b><br>
-      ② 历史低谷 PE 底线 20.6× → 当前 19.3× = <b style="color:#c0392b">市场定价处于 2021 年以来最低水平</b><br>
+      <b>市场验证交叉检验：</b><br>
+      ① 公平价值（周期均值PE 21-26×）= <b>43-54 元</b> → 当前 39.3 元 = <b style="color:#27ae60">低于下沿约 -9%，市场略低估</b><br>
+      ② 当前周期 PE 19.3× ≈ 成熟期 P10（19.1×）= <b style="color:#c0392b">市场定价处于成熟期最低十分位</b><br>
       ③ 期货市场隐含 2027H1 ≈ 12.3-12.9 元/kg → 偏向基准偏上 = <b>复苏预期温和，尚未定价反转</b><br>
-      ④ PE 倍数争议：视频研究认为养猪股仅应给 10× 周期 PE（同质化+低壁垒），项目采用 15-22×（龙头溢价+成本护城河）。折中 12-16× 对应 24-33 元。<br>
-      <b>综合：当前价格处于"模型合理但不够便宜"的位置。安全边际不足（距加权目标价 38 元无空间），但周期高峰期权提供了上行弹性。适合分批建仓，不宜重仓追入。</b>
+      ④ PE 倍数争议已由市场数据裁决：成熟期市场实际支付 21-26×（P25-P75），视频的 10× 与旧假设 12-16× 均被证伪——市场从未在成熟期用 12-16× 定价牧原。<br>
+      <b>综合：当前价格低于市场验证的公平价值下沿，处于成熟期分布最低十分位——安全边际较充分，适合分批建仓；2028 周期峰值（基准 66-73 / 上行 87-96 元）提供上行弹性。</b>
     </p>
   </div>
 
@@ -1011,22 +931,14 @@ th{{font-weight:500;color:#888;font-size:12px;letter-spacing:.3px}}
   <p style="font-size:12px;color:#888">上表为简化模型（不考虑屠宰、饲料、非 hog 业务、利息、税）。实际 EPS 需通过完整财务模型导出（见 §6.2）。</p>
 
   <h3>7.10 峰值利润估值法（视频方法交叉验证）</h3>
-  <p>前述 DCF（7.1）和相对 PE（7.2）均基于<b>周期均值盈利</b>，回答"股票现在值多少钱"。以下引入视频研究的<b>峰值利润法</b>作为补充视角，回答"周期反转后股价能涨到多少"：</p>
-  <table>
-    <tr><th>猪价假设</th><th>推导逻辑</th><th>净利润（亿）</th><th>EPS（元）</th><th>PE=10×</th><th>PE=12×</th><th>PE=15×</th></tr>
-    <tr><td><b>14 元/kg</b></td><td>接近当前期货远期（LH2705=13.0）</td><td style='color:#e67e22'>240</td><td>4.2</td><td>42</td><td>50</td><td>63</td></tr>
-    <tr><td><b>15 元/kg</b></td><td>边际成本定价均衡锚</td><td style='color:#27ae60'>340</td><td>6.0</td><td>60</td><td style='font-weight:600'>72</td><td>90</td></tr>
-    <tr><td><b>16 元/kg</b></td><td>温和回归——猪周期常态峰值</td><td style='color:#27ae60'>440</td><td>7.7</td><td>77</td><td style='font-weight:600'>93</td><td>116</td></tr>
-    <tr><td><b>18 元/kg</b></td><td>较强回归——需供给大幅收缩</td><td style='color:#2980b9'>640</td><td>11.2</td><td>112</td><td style='font-weight:600'>135</td><td>169</td></tr>
-  </table>
-  <p style="font-size:12px;color:#888">假设：出栏 8,000 万头、完全成本 11.6 元/kg、均重 125kg、总股本 57 亿股。PE 10-15×（国外养猪股 10×，国内有增量+龙头溢价→12×合理）。</p>
+  <p>B站深度分析视频用「峰值利润 × PE 10-15×」估算周期回归价值 <b>60-100 元</b>。本项目<b>不采用该模型计算</b>（"峰值 EPS × PE"存在双重周期化问题，且倍数未经市场校准），仅作为定性参照——其 60-100 元区间与市场验证的 PB 峰值预测（基准 66-73 / 上行 87-96 元）基本一致，互相印证"周期反转后股价显著高于当前"的判断。</p>
 
   <div class="box">
     <p style="margin:0"><b>两套方法的关系——互补而非矛盾：</b><br>
-    ① <b>周期均值法（项目主框架）</b>：用 8 年均 EPS 2.04 元 × PE → 内在价值 38 元。这是"正常化"价值，已内嵌所有低谷年份。<br>
-    ② <b>峰值利润法（视频方法）</b>：用周期回归后的峰值利润 × PE → 目标 60-100 元。这是"周期回归后"价值。<br>
-    ③ <b>38 元到 60-100 元的差距</b> = 从周期底部到周期回归的涨幅空间 ≈ +58%~+163%。这正是周期股投资的本质——<b>在周期底部以低于正常化价值的价格买入，等待周期回归后获利</b>。<br>
-    ④ <b>DCF 50 元独立锚</b>：不依赖任何 PE 假设，为上述两套方法提供了中间的交叉验证点。</p>
+    ① <b>周期均值法（项目主框架，市场验证）</b>：AVG8_EPS 2.04 × 成熟期 PE 21-26× → 公平价值 <b>43-54 元</b>。这是"正常化"价值，已内嵌所有低谷年份。<br>
+    ② <b>峰值预测（项目主模型，市场验证）</b>：PB 3.9-4.3× × 2028E BPS → 基准 <b>66-73 元</b> / 上行 <b>87-96 元</b>。这回答"周期回归后能涨到多少"。<br>
+    ③ <b>视频峰值利润法</b>（峰值利润 × PE 10-15× → 60-100 元）与项目 PB 峰值预测（66-96 元）区间基本一致，但视频倍数未经市场校准。<br>
+    ④ <b>公平价值 43-54 元到峰值 66-96 元的差距</b> ≈ +50%~+120%——这正是周期股投资的本质：<b>在周期底部以低于正常化价值的价格买入，等待周期回归后获利</b>。</p>
   </div>
 
   <p class="source">来源：边际成本数据源自B站UP主实地调研（2026年中），敏感性模型为简化公式。峰值利润法源自B站视频研究（BV1vrNR6hEmL）。详见 reports/牧原深度分析估值对比.md。</p>
@@ -1043,10 +955,10 @@ th{{font-weight:500;color:#888;font-size:12px;letter-spacing:.3px}}
     <p style="margin:0">
       <b>评级：<span style="font-size:20px">增持</span></b><br>
       <b>当前股价：</b>{CURRENT_PRICE} 元（{TODAY_STR}）<br>
-      <b>12 个月目标价：42 – 49 元</b>（潜在上涨 +7% – +25%）
-      <span style="font-size:12px;color:#888;">（注：此目标价基于项目原有PE框架15-22×。若采用视频研究的保守PE 12-16×，对应目标33-40元。DCF独立估值50元提供交叉验证。详见第七部分PE倍数争议）</span><br>
-      <b>目标价推导：</b>加权模型合理值 38 元（安全边际 ±15%：32-44 元），结合历史低谷 PE 底线 21× → 43 元、周期均值 PE 24× → 49 元 → <b>综合目标区间 42-49 元</b><br>
-      <b>情景分析：</b>若猪价持续低迷（概率 20%）→ 股价或回落至 30-35 元；若猪价如期货预期温和复苏（概率 50%）→ 40-45 元；若猪价反转至 16+ 元/kg（概率 30%）→ 50+ 元。当前 39.3 元处于"估值合理但安全边际不足"的位置——建议分批建仓而非重仓追入。</p>
+      <b>12 个月目标价：43 – 54 元</b>（潜在上涨 +9% – +37%）
+      <span style="font-size:12px;color:#888;">（注：目标价基于成熟期市场验证框架——周期均值 PE 21-26× × AVG8_EPS 2.04。旧四方法加权与 12-16× 等主观倍数未经市场检验，已弃用。详见第七部分）</span><br>
+      <b>目标价推导：</b>成熟期公平价值带 43-54 元（周期均值 PE 21.1-26.4× × 2.04，中枢约 49 元）→ <b>综合目标区间 43-54 元</b><br>
+      <b>情景分析：</b>若猪价持续低迷（下行情景，概率 20%）→ 2028E BPS 10.59 × PB 3.0-3.5 = 32-37 元；若温和复苏（基准，概率 50%）→ 公平价值 43-54 元、2028 峰值 66-73 元；若强反转（上行，概率 30%）→ 2028 峰值 87-96 元。当前 39.3 元低于公平价值下沿——安全边际较充分，建议分批建仓。</p>
   </div>
     </p>
   </div>
@@ -1055,9 +967,9 @@ th{{font-weight:500;color:#888;font-size:12px;letter-spacing:.3px}}
   <ol>
     <li><b>周期位置有利</b>：猪价处于重度亏损区（猪粮比 4.41），能繁母猪去化方向确定（Q2 -3.2%）。边际成本定价框架显示当前猪价 10.5 元远低于均衡锚 15 元——回归引力持续存在。周期型公司的买入时机往往在最悲观时——但需接受底部可能进一步拉长（集团场主导的周期变形）。</li>
     <li><b>成本护城河在低谷期被放大</b>：当全行业亏损时，成本最低者活到最后——现金成本仅 7.3 元/kg vs 猪价 10.5 元 → 牧原不亏现金、可硬扛；竞争对手的现金在流失。敏感性矩阵显示：猪价每涨 1 元，利润增 100 亿——成本优势的杠杆效应在周期上行时会被极度放大。2026 年行业性亏损将是牧原市场份额进一步提升的窗口。</li>
-    <li><b>估值保护存在但安全边际不足</b>：19.3× 周期 PE 低于任何 2021 年以来的低谷水平。但如果采用视频研究的保守视角（养猪股 12-16× PE），当前价格偏贵。DCF 独立估值 50 元提供了另一种视角的支持。峰值利润估值法揭示周期回归后目标 60-100 元——当前价格反映的是周期底部定价，尚未计入任何反转预期。</li>
+    <li><b>估值保护充分</b>：19.3× 周期 PE ≈ 成熟期 P10（最低十分位），公平价值 43-54 元、当前价格低于下沿约 9%。市场验证的峰值预测（基准 66-73 / 上行 87-96 元）显示当前价格反映的是周期底部定价，尚未计入反转预期。</li>
     <li><b>催化剂逐渐积累</b>：能繁持续去化 → 淘汰母猪折价率下降 → 猪价拐点 → 盈利反转——未来 6-12 个月多条催化剂可能兑现。关键跟踪指标：能繁月度变化 + 淘汰母猪折价率。</li>
-    <li><b>周期高峰期权存在但需管理预期</b>：如果未来 2-3 年内周期进入上行，按峰值利润估值法（§7.10）：猪价 15-18 元/kg × PE 10-15× → 股价 60-169 元。但需注意：本轮反转高度大概率低于上一轮超级周期（集团场产能弹性大，猪价反弹后供给恢复快）。保守取 15 元/kg + PE 12× = 72 元作为更审慎的峰值参考。</li>
+    <li><b>周期高峰期权存在但需管理预期</b>：市场验证的 PB 峰值模型给出 2028 峰值基准 66-73 元、上行 87-96 元。需注意：本轮反转高度大概率低于上一轮超级周期（集团场产能弹性大，猪价反弹后供给恢复快），且峰值 PB 存在递减趋势（2022 过渡期 5.1× → 2025 成熟期 4.25×）——保守取基准情景 66-73 元作为峰值参考。</li>
   </ol>
 
   <h3>8.3 催化剂</h3>
@@ -1091,10 +1003,10 @@ th{{font-weight:500;color:#888;font-size:12px;letter-spacing:.3px}}
   <h3>8.5 操作建议</h3>
   <table>
     <tr><th>操作</th><th>价格区间</th><th>仓位建议</th><th>逻辑</th></tr>
-    <tr><td style='color:#27ae60'>✓ 分批建仓</td><td>35-40 元</td><td>达到目标仓位的 50%</td><td>低于历史低谷 PE 底线——估值保护充分</td></tr>
+    <tr><td style='color:#27ae60'>✓ 分批建仓</td><td>35-40 元</td><td>达到目标仓位的 50%</td><td>低于公平价值下沿 43 元——估值保护充分</td></tr>
     <tr><td style='color:#2980b9'>✓ 加仓</td><td>30-35 元</td><td>加至目标仓位的 80%</td><td>猪价进一步下跌导致市场恐慌——但去化逻辑反而加强</td></tr>
-    <tr><td style='color:#f39c12'>— 持有</td><td>40-50 元</td><td>维持仓位</td><td>估值在合理区间，等待催化剂兑现</td></tr>
-    <tr><td style='color:#e67e22'>⚠ 减仓</td><td>50-60 元</td><td>减至 50%</td><td>周期 PE 达到 24-29×——接近历史估值中枢上沿</td></tr>
+    <tr><td style='color:#f39c12'>— 持有</td><td>40-55 元</td><td>维持仓位</td><td>处于公平价值带（43-54 元）内，等待催化剂兑现</td></tr>
+    <tr><td style='color:#e67e22'>⚠ 减仓</td><td>55-70 元</td><td>减至 50%</td><td>接近基准周期峰值（66-73 元）——周期股应在高估值时兑现</td></tr>
     <tr><td style='color:#c0392b'>✗ 止损</td><td>&lt; 25 元</td><td>清仓</td><td>若跌破意味着猪周期逻辑或公司基本面出现结构性恶化</td></tr>
   </table>
 
@@ -1128,7 +1040,7 @@ th{{font-weight:500;color:#888;font-size:12px;letter-spacing:.3px}}
     <li>猪价预测是估值最大的不确定性来源——生猪期货仅覆盖未来 ~12 个月，长期判断依赖产能趋势推断</li>
     <li>周期均值 EPS 假设"未来周期与过去 8 年相似"——如果行业结构性变化（如规模化导致周期消失），这一假设将不成立</li>
     <li>同行可比数据为手工采集（本机 SSL 阻断），可能存在滞后</li>
-    <li>DCF 对 WACC 和增长率极度敏感——这也是其权重仅 20% 的原因</li>
+    <li>估值基于成熟期市场实测倍数——若行业结构变化导致市场定价逻辑改变（如规模化率进一步上升、猪周期趋平），倍数假设将不成立</li>
     <li>估值结果是"近似值范围"而非精确数字——60-70% 时间做出正确预测已属超常</li>
   </ol>
 
